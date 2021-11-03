@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {ITokenStore} from "./ITokenStore.sol";
+import {ITokenStore} from "./interfaces/ITokenStore.sol";
 import {TokenStore} from "./TokenStore.sol";
 
 abstract contract TokenStoreProxy is ITokenStore {
