@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {ITokenStore} from './ITokenStore.sol';
-import {TokenStore} from './TokenStore.sol';
+import {ITokenStore} from "./ITokenStore.sol";
+import {TokenStore} from "./TokenStore.sol";
 
 abstract contract TokenStoreProxy is ITokenStore {
     /* ========== EVENTS ========== */
@@ -40,7 +40,7 @@ abstract contract TokenStoreProxy is ITokenStore {
     // logic
     function stake(uint256 amount) public virtual override {
         (bool success, bytes memory reason) = tokenStore.delegatecall(
-            abi.encodeWithSignature('stake(uint256)', amount)
+            abi.encodeWithSignature("stake(uint256)", amount)
         );
         require(success, string(reason));
     }

@@ -2,13 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import {ITokenStore} from './ITokenStore.sol';
-import {IERC20} from '../../ERC20/IERC20.sol';
-import {Ownable} from '../../access/Ownable.sol';
-import {Operator} from '../../access/Operator.sol';
-import {SafeERC20} from '../../ERC20/SafeERC20.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Context, Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+import {Operator} from "./Operator.sol";
+import {ITokenStore} from "./interfaces/ITokenStore.sol";
+import {IERC20Burnable} from "./interfaces/IERC20Burnable.sol";
 
 contract TokenStore is ITokenStore, Operator {
     using SafeMath for uint256;
@@ -36,7 +37,7 @@ contract TokenStore is ITokenStore, Operator {
     /* ========== Modifier ============== */
 
     modifier ensureStakeIsEnabled() {
-        require(stakeEnabled, 'Store: stake is disabled');
+        require(stakeEnabled, "Store: stake is disabled");
         _;
     }
 

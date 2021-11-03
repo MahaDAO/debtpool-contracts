@@ -2,14 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import {Address} from '../../utils/Address.sol';
-import {IERC20} from '../../ERC20/IERC20.sol';
-import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
-import {Math} from '../../utils/math/Math.sol';
-import {Operator} from '../../access/Operator.sol';
-import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
-import {SafeERC20} from '../../ERC20/SafeERC20.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import {Operator} from "./Operator.sol";
+import {IERC20Burnable} from "./interfaces/IERC20Burnable.sol";
 
 contract SnapshotBoardroom is ReentrancyGuard, Operator {
     using Address for address;
@@ -50,16 +51,16 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     }
 
     /* ========== Modifiers =============== */
-    modifier directorExists {
+    modifier directorExists() {
         require(
             balanceOf(msg.sender) > 0,
-            'Boardroom: The director does not exist'
+            "Boardroom: The director does not exist"
         );
         _;
     }
 
     modifier ensureStakeIsEnabled() {
-        require(stakeEnabled, 'Store: stake is disabled');
+        require(stakeEnabled, "Store: stake is disabled");
         _;
     }
 
@@ -157,7 +158,7 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
         ensureStakeIsEnabled
         updateReward(who)
     {
-        require(amount > 0, 'Boardroom: Cannot stake 0');
+        require(amount > 0, "Boardroom: Cannot stake 0");
 
         _totalSupply = _totalSupply.add(amount);
         _balances[who] = _balances[who].add(amount);
@@ -174,7 +175,7 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
         uint256 balance = _balances[who];
         require(
             balance >= amount,
-            'Boardroom: withdraw request greater than staked amount'
+            "Boardroom: withdraw request greater than staked amount"
         );
         _totalSupply = _totalSupply.sub(amount);
         _balances[who] = balance.sub(amount);
@@ -191,10 +192,10 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     }
 
     function allocateSeigniorage(uint256 amount) external onlyOperator {
-        require(amount > 0, 'Boardroom: Cannot allocate 0');
+        require(amount > 0, "Boardroom: Cannot allocate 0");
         require(
             totalSupply() > 0,
-            'Boardroom: Cannot allocate when totalSupply is 0'
+            "Boardroom: Cannot allocate when totalSupply is 0"
         );
 
         uint256 prevRPS = getLatestSnapshot().rewardPerShare;

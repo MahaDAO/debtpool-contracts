@@ -2,15 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC20} from '../../ERC20/IERC20.sol';
-import {Math} from '../../utils/math/Math.sol';
-import {Operator} from '../../access/Operator.sol';
-import {SafeERC20} from '../../ERC20/SafeERC20.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {Address} from '../../utils/Address.sol';
-import {TokenStore} from './TokenStore.sol';
-import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
-import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+import {TokenStore} from "./TokenStore.sol";
+import {Operator} from "./Operator.sol";
+import {IERC20Burnable} from "./interfaces/IERC20Burnable.sol";
 
 contract Boardroom is ReentrancyGuard, TokenStore {
     using SafeERC20 for IERC20;
@@ -51,10 +52,10 @@ contract Boardroom is ReentrancyGuard, TokenStore {
     }
 
     /* ========== Modifiers =============== */
-    modifier directorExists {
+    modifier directorExists() {
         require(
             balanceOf(msg.sender) > 0,
-            'Boardroom: The director does not exist'
+            "Boardroom: The director does not exist"
         );
         _;
     }
@@ -114,7 +115,7 @@ contract Boardroom is ReentrancyGuard, TokenStore {
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     function stake(uint256 amount) public override updateReward(msg.sender) {
-        require(amount > 0, 'Boardroom: Cannot stake 0');
+        require(amount > 0, "Boardroom: Cannot stake 0");
         super.stake(amount);
         emit Staked(msg.sender, amount);
     }
@@ -129,10 +130,10 @@ contract Boardroom is ReentrancyGuard, TokenStore {
     }
 
     function allocateSeigniorage(uint256 amount) external onlyOperator {
-        require(amount > 0, 'Boardroom: Cannot allocate 0');
+        require(amount > 0, "Boardroom: Cannot allocate 0");
         require(
             totalSupply() > 0,
-            'Boardroom: Cannot allocate when totalSupply is 0'
+            "Boardroom: Cannot allocate when totalSupply is 0"
         );
 
         // Create & add new snapshot
