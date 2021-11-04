@@ -13,7 +13,6 @@ async function main() {
   const arth = "0xe52509181feb30eb4979e29ec70d50fd5c44d590";
   const maha = "0xedd6ca8a4202d4a36611e2fff109648c4863ae19";
   const usdc = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
-
   const poolTokens = [arth, maha, usdc];
 
   const Contract = await hre.ethers.getContractFactory("PoolToken");
@@ -29,7 +28,7 @@ async function main() {
 
   await hre.run("verify:verify", {
     address: instance.address,
-    constructorArguments: ["Dept Pool Token", "DP-POOL", poolTokens, owner],
+    constructorArguments: ["Debt Pool Token", "DP-POOL", poolTokens, owner],
   });
 }
 
