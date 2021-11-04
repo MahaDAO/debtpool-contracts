@@ -9,24 +9,27 @@ import hre from "hardhat";
 async function main() {
   // set this accordingly
   const owner = "0xa1bc5163FADAbE25880897C95d3701ed388A2AA0";
-  const governance = "0xa1bc5163FADAbE25880897C95d3701ed388A2AA0";
 
   const arth = "0xe52509181feb30eb4979e29ec70d50fd5c44d590";
   const maha = "0xedd6ca8a4202d4a36611e2fff109648c4863ae19";
   const usdc = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
 
   const poolTokens = [arth, maha, usdc];
-  const args = ["Dept Pool Token", "DP-POOL", poolTokens, owner, governance];
 
   const Contract = await hre.ethers.getContractFactory("PoolToken");
-  const instance = await Contract.deploy(...args);
+  const instance = await Contract.deploy(
+    "Dept Pool Token",
+    "DP-POOL",
+    poolTokens,
+    owner
+  );
   await instance.deployed();
 
   await wait(30 * 1000);
 
   await hre.run("verify:verify", {
     address: instance.address,
-    constructorArguments: args,
+    constructorArguments: ["Dept Pool Token", "DP-POOL", poolTokens, owner],
   });
 }
 
