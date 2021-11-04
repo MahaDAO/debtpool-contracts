@@ -13,9 +13,16 @@ contract Router is AccessControl {
     ISnapshotBoardroom public arthBoardroom;
     ISnapshotBoardroom public arthxBoardroom;
 
+    modifier onlyAdmin {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin");
+        _;
+    }
+
     constructor(address _arthBoardroom, address _arthxBoardroom) {
         arthBoardroom = ISnapshotBoardroom(_arthBoardroom);
         arthxBoardroom = ISnapshotBoardroom(_arthxBoardroom);
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     function sendRewards () external {
@@ -33,7 +40,20 @@ contract Router is AccessControl {
 
         // TODO: calculate the value created and mint new pool tokens and register with the boardroom contracts
         // understand how much value is being transferred and mint accordingly.
-        poolToken.mint(address(arthBoardroom), 100 * 1e18 / 2);
-        poolToken.mint(address(arthxBoardroom), 100 * 1e18 / 2);
+        uint256 amountToMint = 100 * 1e18;
+        uint256 arthShare = amountToMint.div(2);
+        uint256 arthxShare = amountToMint.div(2);
+
+        // once calculated; we mint the pool tokens over to the boardrooms
+        poolToken.mint(address(this), amountToMint);
+        poolToken.approve(address(arthBoardroom), arthShare);
+        poolToken.approve(address(arthxBoardroom), arthxShare);
+        arthBoardroom.allocateSeigniorage(arthShare);
+        arthxBoardroom.allocateSeigniorage(arthxShare);
+    }
+
+    function refundTokens(IERC20 token) external onlyAdmin {
+        uint256 balance = token.balanceOf(address(this));
+        token.transfer(_msgSender(), balance);
     }
 }
