@@ -9,10 +9,11 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+import {ISnapshotBoardroom} from "./interfaces/ISnapshotBoardroom.sol";
 import {Operator} from "./Operator.sol";
 import {IPoolToken} from "./interfaces/IPoolToken.sol";
 
-contract SnapshotBoardroom is ReentrancyGuard, Operator {
+contract SnapshotBoardroom is ReentrancyGuard, Operator, ISnapshotBoardroom {
     using Address for address;
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -32,7 +33,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     /* ========== STATE VARIABLES ========== */
     IPoolToken public rewardToken;
     BoardSnapshot[] public boardHistory;
-    bool public stakeEnabled = true;
     mapping(address => Boardseat) public directors;
     mapping(address => uint256) private _balances;
     uint256 private _totalSupply;
@@ -54,11 +54,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
             balanceOf(msg.sender) > 0,
             "Boardroom: The director does not exist"
         );
-        _;
-    }
-
-    modifier ensureStakeIsEnabled() {
-        require(stakeEnabled, "Store: stake is disabled");
         _;
     }
 
@@ -120,34 +115,27 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
-    function toggleStakeEnabled(bool flag) public onlyOwner {
-        stakeEnabled = flag;
-        emit StakeEnableChanged(flag, !flag);
-    }
-
     function setRewardToken(address _poolToken) public onlyOwner {
         emit TokenChanged(msg.sender, address(rewardToken), _poolToken);
         rewardToken = IPoolToken(_poolToken);
     }
 
-    function stakeFor(uint256 amount, address who) public onlyOwner {
-        _stake(amount, who);
+    function register(uint256 amount, address who) public onlyOwner {
+        _register(amount, who);
     }
 
-    function stakeForMultiple(uint256[] memory amount, address[] memory who)
+    function registerMultiple(uint256[] memory amount, address[] memory who)
         public
         onlyOwner
     {
         for (uint256 index = 0; index < amount.length; index++) {
-            _stake(amount[index], who[index]);
+            _register(amount[index], who[index]);
         }
     }
 
-    // logic
-    function _stake(uint256 amount, address who)
+    function _register(uint256 amount, address who)
         internal
         virtual
-        ensureStakeIsEnabled
         updateReward(who)
     {
         require(amount > 0, "Boardroom: Cannot stake 0");
@@ -167,7 +155,7 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
         }
     }
 
-    function allocateSeigniorage(uint256 amount) external onlyOperator {
+    function allocateSeigniorage(uint256 amount) external override onlyOperator {
         require(amount > 0, "Boardroom: Cannot allocate 0");
         require(
             totalSupply() > 0,
@@ -195,7 +183,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     event RewardAdded(address indexed user, uint256 reward);
     event RewardPaid(address indexed user, uint256 reward);
     event Staked(address indexed user, uint256 amount);
-    event StakeEnableChanged(bool newFlag, bool oldFlag);
     event TokenChanged(
         address indexed operator,
         address oldToken,

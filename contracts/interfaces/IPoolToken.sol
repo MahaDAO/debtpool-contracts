@@ -6,7 +6,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IPoolToken is IERC20 {
     function withdraw(uint256 amount) external;
-
+    function getToken(uint256 index) external returns(IERC20);
+    function getTokenCount() external returns(uint256);
+    function mint(address to, uint256 amount) external;
     function withdrawTo(uint256 amount, address to) external;
 
     event ToggleWithdrawals(bool state);
