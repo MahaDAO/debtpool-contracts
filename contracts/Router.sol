@@ -12,9 +12,15 @@ contract Router is AccessControl {
     IPoolToken public poolToken;
     ISnapshotBoardroom public arthBoardroom;
     ISnapshotBoardroom public arthxBoardroom;
+    bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
 
     modifier onlyAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin");
+        _;
+    }
+
+    modifier onlyOracle() {
+        require(hasRole(ORACLE_ROLE, _msgSender()), "not oracle");
         _;
     }
 
@@ -23,9 +29,10 @@ contract Router is AccessControl {
         arthxBoardroom = ISnapshotBoardroom(_arthxBoardroom);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(ORACLE_ROLE, _msgSender());
     }
 
-    function sendRewards () external {
+    function sendRewards () external onlyOracle {
         uint256 totalValueAccumulated18 = 0;
         uint256 totalValuePresent18 = 0;
 
