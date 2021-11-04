@@ -10,7 +10,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import {Operator} from "./Operator.sol";
-import {IERC20Burnable} from "./interfaces/IERC20Burnable.sol";
+import {IPoolToken} from "./interfaces/IPoolToken.sol";
 
 contract SnapshotBoardroom is ReentrancyGuard, Operator {
     using Address for address;
@@ -30,18 +30,16 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     }
 
     /* ========== STATE VARIABLES ========== */
-    address public token;
+    IPoolToken public rewardToken;
     BoardSnapshot[] public boardHistory;
     bool public stakeEnabled = true;
-    IERC20 public cash;
     mapping(address => Boardseat) public directors;
     mapping(address => uint256) private _balances;
     uint256 private _totalSupply;
 
     /* ========== CONSTRUCTOR ========== */
-    constructor(IERC20 _cash, IERC20 _token) {
-        cash = _cash;
-        token = address(_token);
+    constructor(IPoolToken _pooltoken) {
+        rewardToken = _pooltoken;
         BoardSnapshot memory genesisSnapshot = BoardSnapshot({
             time: block.number,
             rewardReceived: 0,
@@ -127,11 +125,9 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
         emit StakeEnableChanged(flag, !flag);
     }
 
-    // gov
-    function setToken(address newToken) public onlyOwner {
-        address oldToken = token;
-        token = newToken;
-        emit TokenChanged(msg.sender, oldToken, newToken);
+    function setRewardToken(address _poolToken) public onlyOwner {
+        emit TokenChanged(msg.sender, address(rewardToken), _poolToken);
+        rewardToken = IPoolToken(_poolToken);
     }
 
     function stakeFor(uint256 amount, address who) public onlyOwner {
@@ -147,10 +143,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
         }
     }
 
-    function withdraw(uint256 amount, address who) public onlyOwner {
-        _withdraw(amount, who);
-    }
-
     // logic
     function _stake(uint256 amount, address who)
         internal
@@ -162,31 +154,15 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
 
         _totalSupply = _totalSupply.add(amount);
         _balances[who] = _balances[who].add(amount);
-        IERC20Burnable(token).burnFrom(who, amount);
         emit Staked(who, amount);
     }
 
-    function _withdraw(uint256 amount, address who)
-        internal
-        virtual
-        ensureStakeIsEnabled
-        updateReward(who)
-    {
-        uint256 balance = _balances[who];
-        require(
-            balance >= amount,
-            "Boardroom: withdraw request greater than staked amount"
-        );
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[who] = balance.sub(amount);
-        IERC20(token).safeTransfer(who, amount);
-    }
 
     function claimReward() public updateReward(msg.sender) {
         uint256 reward = directors[msg.sender].rewardEarned;
         if (reward > 0) {
             directors[msg.sender].rewardEarned = 0;
-            cash.safeTransfer(msg.sender, reward);
+            rewardToken.withdrawTo(reward, msg.sender);
             emit RewardPaid(msg.sender, reward);
         }
     }
@@ -208,7 +184,7 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
         });
         boardHistory.push(newSnapshot);
 
-        cash.safeTransferFrom(msg.sender, address(this), amount);
+        rewardToken.transferFrom(msg.sender, address(this), amount);
         emit RewardAdded(msg.sender, amount);
     }
 
