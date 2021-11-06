@@ -5,8 +5,9 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./interfaces/IPoolToken.sol";
 import "./interfaces/ISnapshotBoardroom.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Router is AccessControl {
+contract Router is AccessControl, ReentrancyGuard {
     using SafeMath for uint256;
 
     IPoolToken public poolToken;
