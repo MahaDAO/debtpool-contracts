@@ -17,7 +17,7 @@ async function main() {
 
   const Contract = await hre.ethers.getContractFactory("PoolToken");
   const instance = await Contract.deploy(
-    "Dept Pool Token",
+    "Debt Pool Token",
     "DP-POOL",
     poolTokens,
     owner
@@ -28,7 +28,7 @@ async function main() {
   await wait(30 * 1000);
 
   await hre.run("verify:verify", {
-    address: instance.address,
+    address: "0x7518eBe3e2a9FC8464C82062467799F9808bcA13",
     constructorArguments: ["Debt Pool Token", "DP-POOL", poolTokens, owner],
   });
 }
