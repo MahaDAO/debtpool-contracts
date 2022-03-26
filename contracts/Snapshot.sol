@@ -5,9 +5,9 @@ pragma solidity ^0.8.0;
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ISnapshot} from "./interfaces/ISnapshot.sol";
-import {Operator} from "./Operator.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Snapshot is Operator, ISnapshot {
+contract Snapshot is Ownable, ISnapshot {
   using Address for address;
   using SafeMath for uint256;
 

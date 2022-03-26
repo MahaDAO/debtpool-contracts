@@ -2,13 +2,10 @@ import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 
 async function main() {
-  const arthSnapshotBoardroom = "0x8c0eB2dEE0596EF58c2b7C47e81B8b41F39a7BDE";
-  const arthxSnapshotBoardroom = "0xCF9cCC08D0FE8f31c29617B89c3a4CB845ae694A";
+  const arthSnapshot = "0x8c0eB2dEE0596EF58c2b7C47e81B8b41F39a7BDE";
+  const arthxSnapshot = "0xCF9cCC08D0FE8f31c29617B89c3a4CB845ae694A";
 
-  const instance = await ethers.getContractAt(
-    "SnapshotBoardroom",
-    arthSnapshotBoardroom
-  );
+  const instance = await ethers.getContractAt("Snapshot", arthSnapshot);
 
   const txs = ["0xeccE08c2636820a81FC0c805dBDC7D846636bbc4,2000"];
 

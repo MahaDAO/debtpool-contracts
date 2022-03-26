@@ -8,10 +8,9 @@ import hre from "hardhat";
 
 async function main() {
   // set this accordingly
-  const poolToken = "0x7518ebe3e2a9fc8464c82062467799f9808bca13";
 
-  const Contract = await hre.ethers.getContractFactory("SnapshotBoardroom");
-  const instance = await Contract.deploy(poolToken);
+  const Contract = await hre.ethers.getContractFactory("Snapshot");
+  const instance = await Contract.deploy();
   await instance.deployed();
   console.log("deployed to ", instance.address);
 
@@ -19,7 +18,7 @@ async function main() {
 
   await hre.run("verify:verify", {
     address: instance.address,
-    constructorArguments: [poolToken],
+    constructorArguments: [],
   });
 }
 
