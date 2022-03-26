@@ -5,7 +5,6 @@
 // Runtime Environment's members available in the global scope.
 import { wait } from "./utils";
 import hre, { ethers } from "hardhat";
-import { ARTHX_SNAPSHOT, GOVERNANCE } from "./config";
 
 async function main() {
   // set this accordingly

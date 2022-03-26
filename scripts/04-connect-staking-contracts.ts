@@ -4,7 +4,7 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { wait } from "./utils";
-import hre, { ethers } from "hardhat";
+import { ethers } from "hardhat";
 import {
   ARTH,
   ARTHX_STAKING_COLLECTOR,
@@ -16,7 +16,6 @@ import {
   MAHA,
   MAHA_ARTHX_STAKING_CHILD,
   MAHA_ARTH_STAKING_CHILD,
-  STAKING_DURATION,
   USDC,
   USDC_ARTHX_STAKING_CHILD,
   USDC_ARTH_STAKING_CHILD,
@@ -57,9 +56,9 @@ async function main() {
     stakingCollectorAddress
   );
 
-  // await stakingMaster.addPools(stakingChildren);
-  // console.log("added staking pools to master contract");
-  // await wait(10 * 1000);
+  await stakingMaster.addPools(stakingChildren);
+  console.log("added staking pools to master contract");
+  await wait(10 * 1000);
 
   for (let index = 0; index < stakingChildren.length; index++) {
     const stakingChild = await ethers.getContractAt(
