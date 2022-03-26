@@ -1,67 +1,70 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./interfaces/IPoolToken.sol";
-import "./interfaces/ISnapshotBoardroom.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Epoch} from "./utils/Epoch.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IStakingCollector} from "./interfaces/IStakingCollector.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Router is AccessControl, ReentrancyGuard {
-    using SafeMath for uint256;
+contract Router is Epoch {
+  using SafeMath for uint256;
 
-    IPoolToken public poolToken;
-    ISnapshotBoardroom public arthBoardroom;
-    ISnapshotBoardroom public arthxBoardroom;
-    bytes32 public constant ORACLE_ROLE = keccak256("ORACLE_ROLE");
+  IStakingCollector public arthCollector;
+  IStakingCollector public arthxCollector;
+  IERC20[] public tokens;
 
-    modifier onlyAdmin {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin");
-        _;
+  event TokenAdded(address indexed token);
+  event TokenReplaced(address indexed token, uint256 index);
+
+  constructor(
+    address _arthBoardroom,
+    address _arthxBoardroom,
+    IERC20[] memory _tokens,
+    uint256 _period
+  ) Epoch(_period, block.timestamp, 0) {
+    arthCollector = IStakingCollector(_arthBoardroom);
+    arthxCollector = IStakingCollector(_arthxBoardroom);
+    tokens = _tokens;
+  }
+
+  function getToken(uint256 index) external view returns (IERC20) {
+    return tokens[index];
+  }
+
+  function getTokenCount() external view returns (uint256) {
+    return tokens.length;
+  }
+
+  function addPoolToken(IERC20 token) external onlyOwner {
+    tokens.push(token);
+    emit TokenAdded(address(token));
+  }
+
+  function replacePoolToken(uint256 index, IERC20 token) external onlyOwner {
+    tokens[index] = token;
+    emit TokenReplaced(address(token), index);
+  }
+
+  function step() external checkEpoch {
+    // TODO: capture totalValuePresent18 and totalValueAccumulated18 properly
+
+    // send all tokens to the various collector contracts
+    for (uint256 i = 0; i < tokens.length; i++) {
+      if (address(tokens[i]) == address(0)) continue;
+      uint256 balance = tokens[i].balanceOf(address(this));
+      if (balance > 0) {
+        tokens[i].transfer(address(arthCollector), balance.div(2));
+        tokens[i].transfer(address(arthxCollector), balance.div(2));
+      }
     }
 
-    modifier onlyOracle() {
-        require(hasRole(ORACLE_ROLE, _msgSender()), "not oracle");
-        _;
-    }
+    arthCollector.step();
+    arthxCollector.step();
+  }
 
-    constructor(address _arthBoardroom, address _arthxBoardroom) {
-        arthBoardroom = ISnapshotBoardroom(_arthBoardroom);
-        arthxBoardroom = ISnapshotBoardroom(_arthxBoardroom);
-
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(ORACLE_ROLE, _msgSender());
-    }
-
-    function sendRewards () external onlyOracle {
-        uint256 totalValueAccumulated18 = 0;
-        uint256 totalValuePresent18 = 0;
-
-        // TODO: capture totalValuePresent18 and totalValueAccumulated18 properly
-
-        // send all tokens to the pool token contract
-        for (uint256 i = 0; i < poolToken.getTokenCount(); i++) {
-            if (address(poolToken.getToken(i)) == address(0)) continue;
-            uint256 balance = poolToken.getToken(i).balanceOf(address(this));
-            if (balance > 0) poolToken.getToken(i).transfer(address(poolToken), balance);
-        }
-
-        // TODO: calculate the value created and mint new pool tokens and register with the boardroom contracts
-        // understand how much value is being transferred and mint accordingly.
-        uint256 amountToMint = 100 * 1e18;
-        uint256 arthShare = amountToMint.div(2);
-        uint256 arthxShare = amountToMint.div(2);
-
-        // once calculated; we mint the pool tokens over to the boardrooms
-        poolToken.mint(address(this), amountToMint);
-        poolToken.approve(address(arthBoardroom), arthShare);
-        poolToken.approve(address(arthxBoardroom), arthxShare);
-        arthBoardroom.allocateSeigniorage(arthShare);
-        arthxBoardroom.allocateSeigniorage(arthxShare);
-    }
-
-    function refundTokens(IERC20 token) external onlyAdmin {
-        uint256 balance = token.balanceOf(address(this));
-        token.transfer(_msgSender(), balance);
-    }
+  function refundTokens(IERC20 token) external onlyOwner {
+    uint256 balance = token.balanceOf(address(this));
+    token.transfer(_msgSender(), balance);
+  }
 }
