@@ -9,52 +9,76 @@ import {
   ARTH,
   ARTHX_STAKING_COLLECTOR,
   ARTHX_STAKING_MASTER,
+  ARTH_ARTHX_STAKING_CHILD,
+  ARTH_ARTH_STAKING_CHILD,
   ARTH_STAKING_COLLECTOR,
   ARTH_STAKING_MASTER,
   MAHA,
+  MAHA_ARTHX_STAKING_CHILD,
+  MAHA_ARTH_STAKING_CHILD,
   STAKING_DURATION,
   USDC,
+  USDC_ARTHX_STAKING_CHILD,
+  USDC_ARTH_STAKING_CHILD,
 } from "./config";
 
 async function main() {
-  const tokens = [
-    ["MAHA", MAHA],
-    ["ARTH", ARTH],
-    ["USDC", USDC],
-  ];
+  const isARTH = true;
 
-  const isARTH = false;
+  const stakingMasterAddress = isARTH
+    ? ARTH_STAKING_MASTER
+    : ARTHX_STAKING_MASTER;
 
-  const Contract = await ethers.getContractFactory("StakingChild");
-  const stakingMaster = isARTH ? ARTH_STAKING_MASTER : ARTHX_STAKING_MASTER;
-  const stakingCollector = isARTH
+  const stakingCollectorAddress = isARTH
     ? ARTH_STAKING_COLLECTOR
     : ARTHX_STAKING_COLLECTOR;
 
-  for (let index = 0; index < tokens.length; index++) {
-    const token = tokens[index];
-    const instance = await Contract.deploy(
-      token[1],
-      stakingMaster,
-      stakingCollector,
-      STAKING_DURATION
+  const stakingChildren = isARTH
+    ? [
+        MAHA_ARTH_STAKING_CHILD,
+        ARTH_ARTH_STAKING_CHILD,
+        USDC_ARTH_STAKING_CHILD,
+      ]
+    : [
+        MAHA_ARTHX_STAKING_CHILD,
+        ARTH_ARTHX_STAKING_CHILD,
+        USDC_ARTHX_STAKING_CHILD,
+      ];
+
+  const tokensWithRate = [MAHA, ARTH, USDC];
+
+  const stakingMaster = await ethers.getContractAt(
+    "StakingMaster",
+    stakingMasterAddress
+  );
+
+  const stakingCollector = await ethers.getContractAt(
+    "StakingCollector",
+    stakingCollectorAddress
+  );
+
+  // await stakingMaster.addPools(stakingChildren);
+  // console.log("added staking pools to master contract");
+  // await wait(10 * 1000);
+
+  for (let index = 0; index < stakingChildren.length; index++) {
+    const stakingChild = await ethers.getContractAt(
+      "StakingChild",
+      stakingChildren[index]
     );
-    await instance.deployed();
 
-    console.log(token[0], "child deployed to ", instance.address);
+    await stakingChild.changeStakingMaster(stakingMasterAddress);
+    console.log("done with", stakingChildren[index]);
+    await wait(10 * 1000);
+  }
 
-    if (index === 0) {
-      await wait(30 * 1000);
-      await hre.run("verify:verify", {
-        address: instance.address,
-        constructorArguments: [
-          token[1],
-          stakingMaster,
-          stakingCollector,
-          STAKING_DURATION,
-        ],
-      });
-    }
+  for (let index = 2; index < tokensWithRate.length; index++) {
+    const stakingChild = stakingChildren[index];
+    const token = tokensWithRate[index];
+
+    await stakingCollector.registerToken(token, 0, stakingChild);
+    console.log("done with", stakingChildren[index]);
+    await wait(10 * 1000);
   }
 }
 
