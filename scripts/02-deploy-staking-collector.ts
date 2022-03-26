@@ -4,12 +4,13 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { wait } from "./utils";
-import hre from "hardhat";
+import hre, { ethers } from "hardhat";
+import { ARTHX_SNAPSHOT, GOVERNANCE } from "./config";
 
 async function main() {
   // set this accordingly
 
-  const Contract = await hre.ethers.getContractFactory("Snapshot");
+  const Contract = await ethers.getContractFactory("StakingCollector");
   const instance = await Contract.deploy();
   await instance.deployed();
   console.log("deployed to ", instance.address);

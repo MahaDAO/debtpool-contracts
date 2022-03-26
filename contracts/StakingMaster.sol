@@ -27,11 +27,11 @@ contract StakingMaster is AccessControl, ReentrancyGuard, IStakingMaster {
   mapping(address => bool) public isPoolValid;
 
   event PoolAdded(address indexed pool);
-  event VotingEscrowChanged(address indexed pool);
+  event SnapshotChanged(address indexed pool);
 
-  constructor(address _owner, address _snapshot) {
-    _setupRole(DEFAULT_ADMIN_ROLE, _owner);
-    _setupRole(UPDATER_ROLE, _owner);
+  constructor(address _governance, address _snapshot) {
+    _setupRole(DEFAULT_ADMIN_ROLE, _governance);
+    _setupRole(UPDATER_ROLE, _governance);
 
     _setupRole(UPDATER_ROLE, _msgSender());
     _setupRole(POOL_MAINTAINER_ROLE, _msgSender());
@@ -116,12 +116,12 @@ contract StakingMaster is AccessControl, ReentrancyGuard, IStakingMaster {
     );
   }
 
-  function setVotingEscrow(address _escrow)
+  function setSnapshot(address _escrow)
     external
     override
     onlyRole(DEFAULT_ADMIN_ROLE)
   {
     snapshot = ISnapshot(_escrow);
-    emit VotingEscrowChanged(_escrow);
+    emit SnapshotChanged(_escrow);
   }
 }

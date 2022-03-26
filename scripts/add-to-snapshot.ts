@@ -2,8 +2,8 @@ import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 
 async function main() {
-  const arthSnapshot = "0x8c0eB2dEE0596EF58c2b7C47e81B8b41F39a7BDE";
-  const arthxSnapshot = "0xCF9cCC08D0FE8f31c29617B89c3a4CB845ae694A";
+  const arthSnapshot = "0x3128582747D71d522f4700780a9Bd368A26B83bA";
+  const arthxSnapshot = "0x541b414779926C609836cf2179107c9288225ecD";
 
   const instance = await ethers.getContractAt("Snapshot", arthSnapshot);
 

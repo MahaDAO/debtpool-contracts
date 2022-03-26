@@ -4,15 +4,15 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IStakingChild} from "./interfaces/IStakingChild.sol";
-import {Epoch} from "./utils/Epoch.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * The staking collector is an automated distribution contract, that distributes rewards in the contract's
- * balance at every epoch.
+ * balance at every step.
  */
-contract StakingCollector is Epoch {
+contract StakingCollector is Ownable {
   using SafeMath for uint256;
 
   address[] public tokens;
@@ -25,10 +25,6 @@ contract StakingCollector is Epoch {
     uint256 rate
   );
   event TokenUpdated(address indexed token, address stakingPool, uint256 rate);
-
-  constructor(uint256 _period) Epoch(_period, block.timestamp, 0) {
-    // nothing
-  }
 
   function registerToken(
     address token,
@@ -56,7 +52,7 @@ contract StakingCollector is Epoch {
     emit TokenUpdated(token, stakingPool, epochRate);
   }
 
-  function step() external checkEpoch {
+  function step() external onlyOwner {
     for (uint256 index = 0; index < tokens.length; index++) {
       IERC20 token = IERC20(tokens[index]);
 
