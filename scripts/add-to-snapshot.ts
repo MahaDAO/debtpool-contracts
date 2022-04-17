@@ -1,33 +1,48 @@
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
+import path from "path";
+import fs from "fs";
+import { ARTHX_SNAPSHOT, ARTH_SNAPSHOT } from "./config";
+import { wait } from "./utils";
 
 async function main() {
-  const arthSnapshot = "0x3128582747D71d522f4700780a9Bd368A26B83bA";
-  const arthxSnapshot = "0x541b414779926C609836cf2179107c9288225ecD";
+  const isARTH = true;
 
-  const instance = await ethers.getContractAt("Snapshot", arthSnapshot);
+  const snapshot = isARTH ? ARTH_SNAPSHOT : ARTHX_SNAPSHOT;
+  const instance = await ethers.getContractAt("Snapshot", snapshot);
 
-  const txs = ["0xeccE08c2636820a81FC0c805dBDC7D846636bbc4,2000"];
+  const text = fs.readFileSync(
+    path.resolve(__dirname, "../output/address.json")
+  );
 
-  const mappedValues = txs.map((t) => t.split(","));
+  const mappedValues = JSON.parse(text.toString());
+  const filteredValues = mappedValues.filter((t: any) => {
+    const val = BigNumber.from(isARTH ? t.arth : t.arthx);
+    return val.gt(0);
+  });
 
-  const addresses = mappedValues.map((t) => t[0]);
-  const decimals = BigNumber.from(10).pow(18);
+  const addresses = filteredValues.map((t: any) => t.address);
+  const e18 = BigNumber.from(10).pow(18);
+  const e1 = BigNumber.from(1);
 
-  const values = mappedValues.map((t) => BigNumber.from(t[1]).mul(decimals));
+  const values = filteredValues.map((t: any) =>
+    BigNumber.from(isARTH ? t.arth : t.arthx).mul(e1)
+  );
 
   // console.log('approving usdc spend');
   // const infinity = decimals.mul(9999999999);
   // await USDC.approve(instance.address, infinity);
   // console.log('approved usdc spend');
 
-  const gap = 200;
+  const gap = 100;
   for (let index = 0; index < values.length / gap; index++) {
     const addressSnip = addresses.slice(index * gap, (index + 1) * gap);
     const valuesSnip = values.slice(index * gap, (index + 1) * gap);
 
+    console.log(addressSnip, valuesSnip);
     console.log("working on n =", valuesSnip.length);
     const tx1 = await instance.registerMultiple(valuesSnip, addressSnip);
+    await wait(5 * 1000);
 
     console.log("done", tx1.hash);
   }

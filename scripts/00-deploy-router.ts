@@ -6,9 +6,23 @@
 import { wait } from "./utils";
 import hre, { ethers } from "hardhat";
 
+import {
+  STAKING_DURATION,
+  ARTHX_STAKING_COLLECTOR,
+  ARTH_STAKING_COLLECTOR,
+  MAHA,
+  ARTH,
+  USDC,
+} from "./config";
+
 async function main() {
-  const Contract = await ethers.getContractFactory("Snapshot");
-  const instance = await Contract.deploy();
+  const Contract = await ethers.getContractFactory("Router");
+  const instance = await Contract.deploy(
+    ARTH_STAKING_COLLECTOR,
+    ARTHX_STAKING_COLLECTOR,
+    [MAHA, ARTH, USDC],
+    STAKING_DURATION
+  );
   await instance.deployed();
   console.log("deployed to ", instance.address);
 
@@ -16,7 +30,12 @@ async function main() {
 
   await hre.run("verify:verify", {
     address: instance.address,
-    constructorArguments: [],
+    constructorArguments: [
+      ARTH_STAKING_COLLECTOR,
+      ARTHX_STAKING_COLLECTOR,
+      [MAHA, ARTH, USDC],
+      STAKING_DURATION,
+    ],
   });
 }
 

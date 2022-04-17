@@ -12,20 +12,24 @@ contract Router is Epoch {
 
   IStakingCollector public arthCollector;
   IStakingCollector public arthxCollector;
+
   IERC20[] public tokens;
+  uint256[] public tokenRates;
 
   event TokenAdded(address indexed token);
   event TokenReplaced(address indexed token, uint256 index);
 
   constructor(
-    address _arthBoardroom,
-    address _arthxBoardroom,
+    address _arthCollector,
+    address _arthxCollector,
     IERC20[] memory _tokens,
+    uint256[] memory _tokenRates,
     uint256 _period
   ) Epoch(_period, block.timestamp, 0) {
-    arthCollector = IStakingCollector(_arthBoardroom);
-    arthxCollector = IStakingCollector(_arthxBoardroom);
+    arthCollector = IStakingCollector(_arthCollector);
+    arthxCollector = IStakingCollector(_arthxCollector);
     tokens = _tokens;
+    tokenRates = _tokenRates;
   }
 
   function getToken(uint256 index) external view returns (IERC20) {
@@ -41,6 +45,14 @@ contract Router is Epoch {
     emit TokenAdded(address(token));
   }
 
+  function setCollectors(
+    IStakingCollector _arthCollector,
+    IStakingCollector _arthxCollector
+  ) external onlyOwner {
+    arthCollector = _arthCollector;
+    arthxCollector = _arthxCollector;
+  }
+
   function replacePoolToken(uint256 index, IERC20 token) external onlyOwner {
     tokens[index] = token;
     emit TokenReplaced(address(token), index);
@@ -52,10 +64,18 @@ contract Router is Epoch {
     // send all tokens to the various collector contracts
     for (uint256 i = 0; i < tokens.length; i++) {
       if (address(tokens[i]) == address(0)) continue;
-      uint256 balance = tokens[i].balanceOf(address(this));
-      if (balance > 0) {
-        tokens[i].transfer(address(arthCollector), balance.div(2));
-        tokens[i].transfer(address(arthxCollector), balance.div(2));
+
+      uint256 tokenBalance = tokens[i].balanceOf(address(this));
+      uint256 ratePerEpoch = tokenRates[i];
+      uint256 balanceToSend;
+
+      // if a rate was not set, then we send everything in the contract
+      if (ratePerEpoch == 0) balanceToSend = tokenBalance;
+      else require(tokenBalance > ratePerEpoch, "not enough tokens");
+
+      if (balanceToSend > 0) {
+        tokens[i].transfer(address(arthCollector), balanceToSend.div(2));
+        tokens[i].transfer(address(arthxCollector), balanceToSend.div(2));
       }
     }
 

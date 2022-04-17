@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IStakingChild} from "./interfaces/IStakingChild.sol";
+import {IStakingCollector} from "./interfaces/IStakingCollector.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -12,61 +13,49 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  * The staking collector is an automated distribution contract, that distributes rewards in the contract's
  * balance at every step.
  */
-contract StakingCollector is Ownable {
+contract StakingCollector is Ownable, IStakingCollector {
   using SafeMath for uint256;
 
   address[] public tokens;
-  mapping(address => uint256) public tokenRatePerEpoch;
+  address router;
+
   mapping(address => address) public tokenStakingPool;
 
-  event TokenRegistered(
-    address indexed token,
-    address stakingPool,
-    uint256 rate
-  );
-  event TokenUpdated(address indexed token, address stakingPool, uint256 rate);
+  event TokenRegistered(address indexed token, address stakingPool);
+  event TokenUpdated(address indexed token, address stakingPool);
+  event RouterChanged(address indexed who, address old, address _router);
 
-  function registerToken(
-    address token,
-    uint256 epochRate,
-    address stakingPool
-  ) external onlyOwner {
+  function registerToken(address token, address stakingPool)
+    external
+    onlyOwner
+  {
     require(tokenStakingPool[token] == address(0), "token already exists");
 
-    tokenRatePerEpoch[token] = epochRate;
     tokenStakingPool[token] = stakingPool;
-    emit TokenRegistered(token, stakingPool, epochRate);
+    emit TokenRegistered(token, stakingPool);
 
     tokens.push(token);
   }
 
-  function updateToken(
-    address token,
-    uint256 epochRate,
-    address stakingPool
-  ) external onlyOwner {
-    require(tokenStakingPool[token] != address(0), "token doesn't exists");
-
-    tokenRatePerEpoch[token] = epochRate;
-    tokenStakingPool[token] = stakingPool;
-    emit TokenUpdated(token, stakingPool, epochRate);
+  function setRouter(address _router) external onlyOwner {
+    emit RouterChanged(_msgSender(), router, _router);
+    router = _router;
   }
 
-  function step() external onlyOwner {
+  function updateToken(address token, address stakingPool) external onlyOwner {
+    require(tokenStakingPool[token] != address(0), "token doesn't exists");
+    tokenStakingPool[token] = stakingPool;
+    emit TokenUpdated(token, stakingPool);
+  }
+
+  function step() external override {
+    require(_msgSender() == router, "not router");
+
     for (uint256 index = 0; index < tokens.length; index++) {
       IERC20 token = IERC20(tokens[index]);
 
       // figure out how much tokens to send
-      uint256 tokenBalance = token.balanceOf(address(this));
-      uint256 ratePerEpoch = tokenRatePerEpoch[tokens[index]];
-      uint256 balanceToSend;
-
-      // if a rate was not set, then we send everything in the contract
-      if (ratePerEpoch == 0)
-        balanceToSend = tokenBalance;
-
-        // if a rate was set, then we send as much as we can
-      else balanceToSend = Math.min(tokenBalance, ratePerEpoch);
+      uint256 balanceToSend = token.balanceOf(address(this));
 
       if (balanceToSend > 0) {
         // send token and notify the staking contract

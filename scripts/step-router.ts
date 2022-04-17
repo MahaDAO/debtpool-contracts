@@ -3,21 +3,15 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-import { wait } from "./utils";
-import hre, { ethers } from "hardhat";
+import { ethers } from "hardhat";
 
 async function main() {
-  const Contract = await ethers.getContractFactory("Snapshot");
-  const instance = await Contract.deploy();
-  await instance.deployed();
-  console.log("deployed to ", instance.address);
-
-  await wait(30 * 1000);
-
-  await hre.run("verify:verify", {
-    address: instance.address,
-    constructorArguments: [],
-  });
+  const instance = await ethers.getContractAt(
+    "Router",
+    "0x0866d2c47Bdcbb72e93c684403FbF937fe1e1cde"
+  );
+  const tx = await instance.estimateGas.step();
+  console.log(tx);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

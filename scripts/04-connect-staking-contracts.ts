@@ -22,7 +22,7 @@ import {
 } from "./config";
 
 async function main() {
-  const isARTH = true;
+  const isARTH = false;
 
   const stakingMasterAddress = isARTH
     ? ARTH_STAKING_MASTER
@@ -56,27 +56,29 @@ async function main() {
     stakingCollectorAddress
   );
 
+  console.log("adding staking pools to master contract", stakingMaster.address);
   await stakingMaster.addPools(stakingChildren);
   console.log("added staking pools to master contract");
   await wait(10 * 1000);
 
-  for (let index = 0; index < stakingChildren.length; index++) {
-    const stakingChild = await ethers.getContractAt(
-      "StakingChild",
-      stakingChildren[index]
-    );
+  // for (let index = 0; index < stakingChildren.length; index++) {
+  //   const stakingChild = await ethers.getContractAt(
+  //     "StakingChild",
+  //     stakingChildren[index]
+  //   );
+  //   await stakingChild.changeStakingMaster(stakingMasterAddress);
+  //   console.log("done with", stakingChildren[index]);
+  //   await wait(10 * 1000);
+  // }
 
-    await stakingChild.changeStakingMaster(stakingMasterAddress);
-    console.log("done with", stakingChildren[index]);
-    await wait(10 * 1000);
-  }
-
-  for (let index = 2; index < tokensWithRate.length; index++) {
+  for (let index = 0; index < tokensWithRate.length; index++) {
     const stakingChild = stakingChildren[index];
     const token = tokensWithRate[index];
 
+    console.log("registering token with collector", token);
+
     await stakingCollector.registerToken(token, 0, stakingChild);
-    console.log("done with", stakingChildren[index]);
+    console.log("done with", token);
     await wait(10 * 1000);
   }
 }

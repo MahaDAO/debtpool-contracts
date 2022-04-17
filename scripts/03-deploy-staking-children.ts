@@ -23,7 +23,7 @@ async function main() {
     ["USDC", USDC],
   ];
 
-  const isARTH = false;
+  const isARTH = true;
 
   const Contract = await ethers.getContractFactory("StakingChild");
   const stakingMaster = isARTH ? ARTH_STAKING_MASTER : ARTHX_STAKING_MASTER;
@@ -43,18 +43,18 @@ async function main() {
 
     console.log(token[0], "child deployed to ", instance.address);
 
-    if (index === 0) {
-      await wait(30 * 1000);
-      await hre.run("verify:verify", {
-        address: instance.address,
-        constructorArguments: [
-          token[1],
-          stakingMaster,
-          stakingCollector,
-          STAKING_DURATION,
-        ],
-      });
-    }
+    // if (index === 0) {
+    //   await wait(30 * 1000);
+    //   await hre.run("verify:verify", {
+    //     address: instance.address,
+    //     constructorArguments: [
+    //       token[1],
+    //       stakingMaster,
+    //       stakingCollector,
+    //       STAKING_DURATION,
+    //     ],
+    //   });
+    // }
   }
 }
 
