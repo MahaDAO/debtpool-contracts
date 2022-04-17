@@ -14,13 +14,17 @@ import {
   ARTH,
   USDC,
 } from "./config";
+import { BigNumber } from "ethers";
 
 async function main() {
+  const e18 = BigNumber.from(10).pow(18);
+
   const Contract = await ethers.getContractFactory("Router");
   const instance = await Contract.deploy(
     ARTH_STAKING_COLLECTOR,
     ARTHX_STAKING_COLLECTOR,
     [MAHA, ARTH, USDC],
+    [e18.mul(10), 0, 0],
     STAKING_DURATION
   );
   await instance.deployed();
@@ -41,9 +45,4 @@ async function main() {
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+main().catch(console.error);
