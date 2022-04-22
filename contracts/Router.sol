@@ -58,7 +58,7 @@ contract Router is Epoch {
     emit TokenReplaced(address(token), index);
   }
 
-  function step() external checkEpoch {
+  function step() external {
     // TODO: capture totalValuePresent18 and totalValueAccumulated18 properly
 
     // send all tokens to the various collector contracts
@@ -71,7 +71,10 @@ contract Router is Epoch {
 
       // if a rate was not set, then we send everything in the contract
       if (ratePerEpoch == 0) balanceToSend = tokenBalance;
-      else require(tokenBalance > ratePerEpoch, "not enough tokens");
+      else {
+        require(tokenBalance > ratePerEpoch, "not enough tokens");
+        balanceToSend = ratePerEpoch;
+      }
 
       if (balanceToSend > 0) {
         tokens[i].transfer(address(arthCollector), balanceToSend.div(2));

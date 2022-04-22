@@ -44,7 +44,7 @@ const config: HardhatUserConfig = {
     },
     polygon: {
       url: process.env.POLYGON_RPC || "",
-      // gasPrice:
+      gasPrice: 100 * 1e9,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },

@@ -56,10 +56,10 @@ async function main() {
     stakingCollectorAddress
   );
 
-  console.log("adding staking pools to master contract", stakingMaster.address);
-  await stakingMaster.addPools(stakingChildren);
-  console.log("added staking pools to master contract");
-  await wait(10 * 1000);
+  // console.log("adding staking pools to master contract", stakingMaster.address);
+  // await stakingMaster.addPools(stakingChildren);
+  // console.log("added staking pools to master contract");
+  // await wait(10 * 1000);
 
   // for (let index = 0; index < stakingChildren.length; index++) {
   //   const stakingChild = await ethers.getContractAt(
@@ -77,8 +77,8 @@ async function main() {
 
     console.log("registering token with collector", token);
 
-    await stakingCollector.registerToken(token, 0, stakingChild);
-    console.log("done with", token);
+    const tx = await stakingCollector.registerToken(token, stakingChild);
+    console.log("done with", tx.hash);
     await wait(10 * 1000);
   }
 }

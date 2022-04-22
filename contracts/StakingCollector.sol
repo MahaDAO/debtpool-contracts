@@ -17,7 +17,7 @@ contract StakingCollector is Ownable, IStakingCollector {
   using SafeMath for uint256;
 
   address[] public tokens;
-  address router;
+  address public router;
 
   mapping(address => address) public tokenStakingPool;
 
