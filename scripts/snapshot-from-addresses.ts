@@ -1,3 +1,4 @@
+/* eslint-disable no-process-exit */
 import hre from "hardhat";
 import fs from "fs";
 import path from "path";

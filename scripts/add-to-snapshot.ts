@@ -1,3 +1,5 @@
+/* eslint-disable node/no-missing-import */
+/* eslint-disable no-process-exit */
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import path from "path";
@@ -6,7 +8,7 @@ import { ARTHX_SNAPSHOT, ARTH_SNAPSHOT } from "./config";
 import { wait } from "./utils";
 
 async function main() {
-  const isARTH = true;
+  const isARTH = false;
 
   const snapshot = isARTH ? ARTH_SNAPSHOT : ARTHX_SNAPSHOT;
   const instance = await ethers.getContractAt("Snapshot", snapshot);
@@ -23,10 +25,10 @@ async function main() {
 
   const addresses = filteredValues.map((t: any) => t.address);
   const e18 = BigNumber.from(10).pow(18);
-  const e1 = BigNumber.from(1);
+  // const e1 = BigNumber.from(1);
 
   const values = filteredValues.map((t: any) =>
-    BigNumber.from(isARTH ? t.arth : t.arthx).mul(e1)
+    BigNumber.from(isARTH ? t.arth : t.arthx).mul(e18)
   );
 
   // console.log('approving usdc spend');
