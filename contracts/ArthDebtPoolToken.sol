@@ -13,7 +13,7 @@ contract ArthDebtPoolToken is AccessControlEnumerable, ERC20 {
     _setupRole(MINTER_ROLE, _msgSender());
   }
 
-  function mint(address to, uint256 amount) public virtual {
+  function mintDPToken(address to, uint256 amount) public virtual {
     require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role to mint");
     _mint(to, amount);
     _totalCiculatingSupply += amount;
@@ -27,7 +27,7 @@ contract ArthDebtPoolToken is AccessControlEnumerable, ERC20 {
     }
   }
 
-  function burn(uint256 amount) public virtual {
+  function burnDPToken(uint256 amount) public virtual {
     _burn(msg.sender, amount);
   }
 
