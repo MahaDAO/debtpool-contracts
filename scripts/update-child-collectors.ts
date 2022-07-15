@@ -17,7 +17,7 @@ import {
 } from "./config";
 
 async function main() {
-  const isARTH = true;
+  const isARTH = false;
 
   const stakingCollectorAddress = isARTH
     ? ARTH_STAKING_COLLECTOR

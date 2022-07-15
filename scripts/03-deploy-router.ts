@@ -24,7 +24,7 @@ async function main() {
     ARTH_STAKING_COLLECTOR,
     ARTHX_STAKING_COLLECTOR,
     [MAHA, ARTH, USDC],
-    [e18.mul(10), 0, 0],
+    [0, 0, 0],
     STAKING_DURATION
   );
   await instance.deployed();
@@ -38,7 +38,7 @@ async function main() {
       ARTH_STAKING_COLLECTOR,
       ARTHX_STAKING_COLLECTOR,
       [MAHA, ARTH, USDC],
-      [e18.mul(10), 0, 0],
+      [0, 0, 0],
       STAKING_DURATION,
     ],
   });

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol"; 
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol"; 
+
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract ArthDebtPoolToken is AccessControlEnumerable, ERC20 {
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -31,7 +32,7 @@ contract ArthDebtPoolToken is AccessControlEnumerable, ERC20 {
     _burn(msg.sender, amount);
   }
 
-  function getTotalCirculatingSupply() public view returns (uint256){
-    return _totalCiculatingSupply;
-  }
+    function getTotalCirculatingSupply() public view returns (uint256) {
+        return _totalCiculatingSupply;
+    }
 }

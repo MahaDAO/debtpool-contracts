@@ -16,6 +16,7 @@ contract Router is Epoch {
   IERC20[] public tokens;
   uint256[] public tokenRates;
 
+  event RateReplaced(uint256 rate, uint256 index);
   event TokenAdded(address indexed token);
   event TokenReplaced(address indexed token, uint256 index);
 
@@ -40,8 +41,9 @@ contract Router is Epoch {
     return tokens.length;
   }
 
-  function addPoolToken(IERC20 token) external onlyOwner {
+  function addPoolToken(IERC20 token, uint256 rate) external onlyOwner {
     tokens.push(token);
+    tokenRates.push(rate);
     emit TokenAdded(address(token));
   }
 
@@ -51,6 +53,11 @@ contract Router is Epoch {
   ) external onlyOwner {
     arthCollector = _arthCollector;
     arthxCollector = _arthxCollector;
+  }
+
+  function setRate(uint256 index, uint256 rate) external onlyOwner {
+    tokenRates[index] = rate;
+    emit RateReplaced(rate, index);
   }
 
   function replacePoolToken(uint256 index, IERC20 token) external onlyOwner {

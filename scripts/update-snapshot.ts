@@ -29,7 +29,7 @@ async function main() {
   // console.log('approved usdc spend');
 
   const gap = 50;
-  for (let index = 9; index < addresses.length / gap; index++) {
+  for (let index = 0; index < addresses.length / gap; index++) {
     const addressSnip = addresses.slice(index * gap, (index + 1) * gap);
 
     // console.log(addressSnip, valuesSnip);
