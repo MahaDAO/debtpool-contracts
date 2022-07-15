@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.4.18;
 
+import {ERC20} from "./ERC20.sol";
 
 contract EventfulMarket {
     event LogItemUpdate(uint id); // event is used for offer, cancel and buy functions

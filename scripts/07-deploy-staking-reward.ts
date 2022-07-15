@@ -4,17 +4,18 @@ import { wait } from "./utils";
 import hre, { ethers } from "hardhat";
 
 async function main() {
-  const tokenAdrs = "0x2057d85f2eA34a3ff78E4fE092979DBF4dd32766";
+  // const tokenAdrs = "0x2057d85f2eA34a3ff78E4fE092979DBF4dd32766"; // Rinkeby ARTH-DP token address
+  const tokenAdrs = "0x2da2874F40c4c5DF7D80aBABe016d915fd8A9355";
   const duration = "30000000000000000000"; // 30 days
   const params = [
-    `${process.env.MyWalletAdrs}`,
+    `${process.env.MainWalletAdrs}`,
     tokenAdrs,
     tokenAdrs,
     duration,
   ];
 
   const Contract = await ethers.getContractFactory("StakingRewardsV2");
-  console.log("process.env.MyWalletAdrs", process.env.MyWalletAdrs);
+
   const instance = await Contract.deploy(
     params[0],
     params[1],

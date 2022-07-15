@@ -4,6 +4,7 @@ pragma solidity ^0.4.18;
 import {MatchingEvents} from "./MatchingEvents.sol";
 import {ExpiringMarket} from "./ExpiringMarket.sol";
 import {DSNote} from "./DSNote.sol";
+import {ERC20} from "./ERC20.sol";
 
 contract MatchingMarket is MatchingEvents, ExpiringMarket, DSNote {
     bool public buyEnabled = true;      //buy enabled

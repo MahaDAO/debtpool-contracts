@@ -2,6 +2,8 @@
 pragma solidity ^0.4.18;
 
 import {EventfulMarket} from "./EventfulMarket.sol";
+import {DSMath} from "./DSMath.sol";
+import {ERC20} from "./ERC20.sol";
 
 contract SimpleMarket is EventfulMarket, DSMath {
 
