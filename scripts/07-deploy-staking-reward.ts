@@ -5,7 +5,7 @@ import hre, { ethers } from "hardhat";
 
 async function main() {
   // const tokenAdrs = "0x2057d85f2eA34a3ff78E4fE092979DBF4dd32766"; // Rinkeby ARTH-DP token address
-  const tokenAdrs = "0x2da2874F40c4c5DF7D80aBABe016d915fd8A9355";
+  const tokenAdrs = `${process.env.DP_TOKEN}`;
   const duration = "30000000000000000000"; // 30 days
   const params = [
     `${process.env.MainWalletAdrs}`,

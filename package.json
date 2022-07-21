@@ -1,7 +1,7 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "compile": "hardhat compile"
+    "compile": "npx hardhat compile"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",

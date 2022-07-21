@@ -7,10 +7,13 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ISnapshot} from "./interfaces/ISnapshot.sol";
 import {IERC20BurnerMinter} from "./interfaces/IERC20BurnerMinter.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract Snapshot is Ownable, ISnapshot {
     using Address for address;
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     IERC20BurnerMinter public token;
     mapping(address => uint256) private _balances;
@@ -19,6 +22,12 @@ contract Snapshot is Ownable, ISnapshot {
     uint256 private _totalSupply;
     uint256 public gonsPerFragment = 1e6;
     uint256 public gonsDecimals = 6;
+ 
+    /* ========== CONSTRUCTOR ========== */
+
+    constructor(address _dptoken) public {
+        token = IERC20BurnerMinter(_dptoken);
+    }
 
     function totalSupply() external view override returns (uint256) {
         return _totalSupply.mul(gonsPerFragment).div(gonsPercision());

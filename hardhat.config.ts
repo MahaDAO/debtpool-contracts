@@ -47,28 +47,29 @@ const config: HardhatUserConfig = {
   networks: {
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
-      // gas: 2100,
-      // gasPrice: 8000,
+      gas: 2100,
+      gasPrice: 8000,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     polygon: {
       url: process.env.POLYGON_RPC || "",
-      // gas: 2100,
-      // gasPrice: 100 * 1e9,
+      gas: 21000,
+      gasPrice: 100 * 1e9,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     maticMumbai: {
       url: process.env.MATICMUMBAI_URL || "",
-      // gas: 2100000,
-      // gasPrice: 8000,
+      gas: 2100000,
+      gasPrice: 8000,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/3a9a6018905e45669f505505420d81d6`,
-      // gasPrice: 8000,
+      gasPrice: 8000,
+      gas: 2100000,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
