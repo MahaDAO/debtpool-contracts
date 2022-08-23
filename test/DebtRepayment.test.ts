@@ -41,7 +41,7 @@ describe("DebtRepayment", function () {
     expect(await staker.snapshot()).eq(contract.address);
   });
 
-  describe.only("test factorMultiplierE18(x)", async () => {
+  describe("test factorMultiplierE18(x)", async () => {
     it("should report 1% if x = 100%", async () => {
       expect(await contract.factorMultiplierE18(e18)).eq(e18.div(100));
     });
@@ -59,6 +59,34 @@ describe("DebtRepayment", function () {
       expect(await contract.factorMultiplierE18(e18.div(100))).eq(
         e18.div(10000).mul(9801)
       );
+    });
+  });
+
+  describe("test convertDebtToDebtX(debt, factor)", async () => {
+    it("should report 1 debtx if debt = 100 and factor = 100%", async () => {
+      expect(await contract.convertDebtToDebtX(100, e18)).eq(1);
+    });
+
+    it("should report 81 debtx if debt = 100 and factor = 10%", async () => {
+      expect(await contract.convertDebtToDebtX(100, e18.div(10))).eq(81);
+    });
+
+    it("should report 98 debtx if debt = 100 and factor = 1%", async () => {
+      expect(await contract.convertDebtToDebtX(10000, e18.div(100))).eq(9801);
+    });
+  });
+
+  describe("test convertDebtXToDebt(debtx, factor)", async () => {
+    it("should report 100 debt if debtx = 1 and factor = 100%", async () => {
+      expect(await contract.convertDebtXToDebt(1, e18)).eq(100);
+    });
+
+    it("should report 100 debt if debtx = 81 and factor = 10%", async () => {
+      expect(await contract.convertDebtXToDebt(81, e18.div(10))).eq(100);
+    });
+
+    it("should report 100 debt if debtx = 98 and factor = 1%", async () => {
+      expect(await contract.convertDebtXToDebt(9801, e18.div(100))).eq(10000);
     });
   });
 
