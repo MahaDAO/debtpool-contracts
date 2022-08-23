@@ -99,31 +99,49 @@ describe("DebtRepayment", function () {
       expect(await contract.debtFragmentBalances(chicken.address)).eq(b300);
     });
 
+    it("should report proper totalSupply()", async () => {
+      expect(await contract.totalSupply()).eq(b300);
+    });
+
     it("should report proper debtx factor", async () => {
       expect(await contract.userDebtxFactor(chicken.address)).eq(e18);
     });
 
     it("should report proper debtx balance", async () => {
-      expect(await contract.balanceOfDebtx(chicken.address)).eq(b300);
+      expect(await contract.balanceOfDebtx(chicken.address)).eq(b300.div(100));
     });
 
-    describe("if the user rebase his debt down by 10%", async () => {
+    it("should report proper totalSupplyDebtx()", async () => {
+      expect(await contract.totalSupplyDebtx()).eq(b300.div(100));
+    });
+
+    describe("if the user rebase his debt down by 20%", async () => {
       beforeEach("should execute rebase properly", async () => {
-        await contract.connect(chicken).rebaseDebt(e18.div(10).mul(9));
+        await contract.connect(chicken).rebaseDebt(e18.div(10).mul(8));
       });
 
       it("should report proper fragments", async () => {
         expect(await contract.debtFragmentBalances(chicken.address)).eq(b300);
       });
 
+      it("should report proper totalSupply()", async () => {
+        expect(await contract.totalSupply()).eq(b300);
+      });
+
       it("should report proper debtx factor", async () => {
         expect(await contract.userDebtxFactor(chicken.address)).eq(
-          e18.div(10).mul(9)
+          e18.div(10).mul(8)
         );
       });
 
       it("should report proper debtx balance", async () => {
-        expect(await contract.balanceOfDebtx(chicken.address)).eq(b300);
+        expect(await contract.balanceOfDebtx(chicken.address)).eq(
+          e18.div(100).mul(1200)
+        );
+      });
+
+      it("should report proper totalSupplyDebtx()", async () => {
+        expect(await contract.totalSupplyDebtx()).eq(e18.div(100).mul(1200));
       });
     });
   });
