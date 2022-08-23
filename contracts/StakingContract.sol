@@ -29,14 +29,10 @@ contract StakingContract is Ownable, IStakingContract, ReentrancyGuard {
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
 
-    constructor(
-        address _rewardsToken,
-        address _snapshot,
-        uint256 _rewardsDuration
-    ) {
+    constructor(address _rewardsToken, address _snapshot) {
         snapshot = ISnapshot(_snapshot);
         rewardsToken = IERC20(_rewardsToken);
-        rewardsDuration = _rewardsDuration;
+        rewardsDuration = 1;
 
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(rewardsDuration);
@@ -45,11 +41,11 @@ contract StakingContract is Ownable, IStakingContract, ReentrancyGuard {
     /* ========== VIEWS ========== */
 
     function totalSupply() public view override returns (uint256) {
-        return snapshot.totalDebtSupply();
+        return snapshot.totalSupplyDebtx();
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        return snapshot.debtOf(account);
+        return snapshot.balanceOfDebtx(account);
     }
 
     function lastTimeRewardApplicable() public view override returns (uint256) {

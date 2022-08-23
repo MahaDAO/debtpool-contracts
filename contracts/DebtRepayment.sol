@@ -6,6 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {ISnapshot} from "./interfaces/ISnapshot.sol";
 
 interface IStakingContract {
@@ -18,7 +19,7 @@ interface IStakingContract {
 // fragments = 1000
 // gonsPerFragment = 1000
 
-contract DebtRepayment is AccessControl, ISnapshot {
+contract DebtRepayment is Initializable, AccessControl, ISnapshot {
     using SafeMath for uint256;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -26,18 +27,19 @@ contract DebtRepayment is AccessControl, ISnapshot {
     uint256 public totalFragments;
     uint256 public totalDebtxFragments;
     mapping(address => uint256) public debtFragmentBalances;
-    mapping(address => uint256) private _userFactor;
+    mapping(address => uint256) public userDebtxFactor;
 
     IStakingContract public rewards;
 
     uint256 public constant MAX_FACTOR = 1e18; // 100%
     uint256 public constant MIN_FACTOR = 1e16; // 1%
     uint256 public constant GONS_PERCISION = 1e18;
-
     uint256 public gonsPerFragment = 1e18;
 
-    constructor(address _rewards) {
+    function initialize(address _rewards) external initializer {
         rewards = IStakingContract(_rewards);
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
     }
 
     function register(uint256 amount, address who) external override {
@@ -45,7 +47,7 @@ contract DebtRepayment is AccessControl, ISnapshot {
         _checkRole(MINTER_ROLE, _msgSender());
 
         debtFragmentBalances[who] = amount;
-        _userFactor[who] = MAX_FACTOR;
+        userDebtxFactor[who] = MAX_FACTOR;
 
         totalFragments += amount;
         totalDebtxFragments += balanceOfDebtx(who);
@@ -70,7 +72,8 @@ contract DebtRepayment is AccessControl, ISnapshot {
         override
         returns (uint256)
     {
-        return convertDebtXToDebt(debtFragmentBalances[who], _userFactor[who]);
+        return
+            convertDebtToDebtX(debtFragmentBalances[who], userDebtxFactor[who]);
     }
 
     function rebaseDebt(uint256 debtxFactor) external {
@@ -78,15 +81,15 @@ contract DebtRepayment is AccessControl, ISnapshot {
         require(debtFragmentBalances[who] >= 0, "balance = 0");
 
         totalDebtxFragments -= balanceOfDebtx(who);
-        _userFactor[who] = debtxFactor;
-
+        userDebtxFactor[who] = debtxFactor;
         totalDebtxFragments += balanceOfDebtx(who);
+
         rewards.updateReward(who);
     }
 
     function distribute(uint256 amount) external {
         // todo: find out how much to reduce the gons by
-        uint256 gonsToReduceBy = 100;
+        uint256 gonsToReduceBy = 1e17; // 10%?
         gonsPerFragment = gonsPerFragment.sub(gonsToReduceBy);
         rewards.notifyRewardAmount(amount);
     }
