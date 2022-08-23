@@ -97,7 +97,7 @@ contract DebtRepayment is Initializable, AccessControl, ISnapshot {
     // @dev spits out a range between 100 - 1% in e18
     function factorMultiplierE18(uint256 factor) public pure returns (uint256) {
         require(factor <= MAX_FACTOR, "above MAX_FACTOR");
-        return Math.max(MIN_FACTOR, (MAX_FACTOR - factor)**2 / 1e18);
+        return Math.max(MIN_FACTOR, ((MAX_FACTOR - factor)**2) / 1e18);
     }
 
     function convertDebtToDebtX(uint256 debt, uint256 factor)

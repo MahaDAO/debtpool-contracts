@@ -11,8 +11,8 @@ describe("DebtRepayment", function () {
   let staker: Contract;
   let usdc: Contract;
 
-  const ONEe18 = BigNumber.from(10).pow(18);
-  const debtSample = ONEe18.mul(1000);
+  const e18 = BigNumber.from(10).pow(18);
+  const b300 = e18.mul(300);
 
   before("setup accounts & deploy libraries", async () => {
     [operator, chicken] = await ethers.getSigners();
@@ -41,23 +41,62 @@ describe("DebtRepayment", function () {
     expect(await staker.snapshot()).eq(contract.address);
   });
 
+  describe.only("test factorMultiplierE18(x)", async () => {
+    it("should report 1% if x = 100%", async () => {
+      expect(await contract.factorMultiplierE18(e18)).eq(e18.div(100));
+    });
+    it("should report 1% if x = 99%", async () => {
+      expect(await contract.factorMultiplierE18(e18.div(100).mul(99))).eq(
+        e18.div(100)
+      );
+    });
+    it("should report 81% if x = 10%", async () => {
+      expect(await contract.factorMultiplierE18(e18.div(10))).eq(
+        e18.div(100).mul(81)
+      );
+    });
+    it("should report 98% if x = 1%", async () => {
+      expect(await contract.factorMultiplierE18(e18.div(100))).eq(
+        e18.div(10000).mul(9801)
+      );
+    });
+  });
+
   describe("should mint properly to a user", async () => {
     beforeEach("should mint debt to user", async () => {
-      await contract.register(debtSample, chicken.address);
+      await contract.register(b300, chicken.address);
     });
 
     it("should report proper fragments", async () => {
-      expect(await contract.debtFragmentBalances(chicken.address)).eq(
-        debtSample
-      );
+      expect(await contract.debtFragmentBalances(chicken.address)).eq(b300);
     });
 
     it("should report proper debtx factor", async () => {
-      expect(await contract.userDebtxFactor(chicken.address)).eq(ONEe18);
+      expect(await contract.userDebtxFactor(chicken.address)).eq(e18);
     });
 
     it("should report proper debtx balance", async () => {
-      expect(await contract.balanceOfDebtx(chicken.address)).eq(debtSample);
+      expect(await contract.balanceOfDebtx(chicken.address)).eq(b300);
+    });
+
+    describe("if the user rebase his debt down by 10%", async () => {
+      beforeEach("should execute rebase properly", async () => {
+        await contract.connect(chicken).rebaseDebt(e18.div(10).mul(9));
+      });
+
+      it("should report proper fragments", async () => {
+        expect(await contract.debtFragmentBalances(chicken.address)).eq(b300);
+      });
+
+      it("should report proper debtx factor", async () => {
+        expect(await contract.userDebtxFactor(chicken.address)).eq(
+          e18.div(10).mul(9)
+        );
+      });
+
+      it("should report proper debtx balance", async () => {
+        expect(await contract.balanceOfDebtx(chicken.address)).eq(b300);
+      });
     });
   });
 });
