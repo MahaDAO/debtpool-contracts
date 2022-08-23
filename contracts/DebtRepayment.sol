@@ -14,62 +14,73 @@ interface IStakingContract {
     function updateReward(address who) external;
 }
 
+// user -> debt in fragments -> debtx in fragments -> gons
+// fragments = 1000
+// gonsPerFragment = 1000
+
 contract DebtRepayment is AccessControl, ISnapshot {
     using SafeMath for uint256;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    uint256 totalFragments;
-    mapping(address => uint256) public fragmentBalances;
+    uint256 public totalFragments;
+    uint256 public totalDebtxFragments;
+    mapping(address => uint256) public debtFragmentBalances;
     mapping(address => uint256) private _userFactor;
 
     IStakingContract public rewards;
 
     uint256 public constant MAX_FACTOR = 1e18; // 100%
     uint256 public constant MIN_FACTOR = 1e16; // 1%
-    uint256 public gonsPerFragment = 1e8;
+    uint256 public constant GONS_PERCISION = 1e18;
+
+    uint256 public gonsPerFragment = 1e18;
 
     constructor(address _rewards) {
         rewards = IStakingContract(_rewards);
     }
 
     function register(uint256 amount, address who) external override {
-        require(fragmentBalances[who] == 0, "already minted");
+        require(debtFragmentBalances[who] == 0, "already minted");
         _checkRole(MINTER_ROLE, _msgSender());
 
-        fragmentBalances[who] = convertDebtToDebtX(amount, MAX_FACTOR);
+        debtFragmentBalances[who] = amount;
         _userFactor[who] = MAX_FACTOR;
 
-        totalFragments += balanceOf(who);
+        totalFragments += amount;
+        totalDebtxFragments += balanceOfDebtx(who);
         rewards.updateReward(who);
     }
 
     function balanceOf(address who) public view override returns (uint256) {
-        return fragmentBalances[who] * gonsPerFragment;
+        return convertFragmentToGons(balanceOfDebtx(who));
     }
 
     function totalSupply() public view override returns (uint256) {
-        return totalFragments * gonsPerFragment;
+        return convertFragmentToGons(totalFragments);
     }
 
-    function debtOf(address who) external view returns (uint256) {
-        return convertDebtXToDebt(fragmentBalances[who], _userFactor[who]);
+    function totalSupplyDebtx() public view override returns (uint256) {
+        return convertFragmentToGons(totalDebtxFragments);
     }
 
-    function rebase(uint256 factor) external {
+    function balanceOfDebtx(address who)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return convertDebtXToDebt(debtFragmentBalances[who], _userFactor[who]);
+    }
+
+    function rebaseDebt(uint256 debtxFactor) external {
         address who = _msgSender();
-        require(fragmentBalances[who] >= 0, "balance = 0");
+        require(debtFragmentBalances[who] >= 0, "balance = 0");
 
-        totalFragments -= balanceOf(who);
+        totalDebtxFragments -= balanceOfDebtx(who);
+        _userFactor[who] = debtxFactor;
 
-        // update debt values
-        uint256 debt = convertDebtXToDebt(
-            fragmentBalances[who],
-            _userFactor[who]
-        );
-        fragmentBalances[who] = convertDebtToDebtX(debt, factor);
-
-        totalFragments += balanceOf(who);
+        totalDebtxFragments += balanceOfDebtx(who);
         rewards.updateReward(who);
     }
 
@@ -82,6 +93,7 @@ contract DebtRepayment is AccessControl, ISnapshot {
 
     // @dev spits out a range between 100 - 1% in e18
     function factorMultiplierE18(uint256 factor) public pure returns (uint256) {
+        require(factor <= MAX_FACTOR, "above MAX_FACTOR");
         return Math.max(MIN_FACTOR, (MAX_FACTOR - factor)**2 / 1e18);
     }
 
@@ -99,5 +111,21 @@ contract DebtRepayment is AccessControl, ISnapshot {
         returns (uint256 debt)
     {
         debt = (debtx * 1e18) / factorMultiplierE18(factor);
+    }
+
+    function convertFragmentToGons(uint256 fragments)
+        public
+        view
+        returns (uint256 gons)
+    {
+        gons = fragments.mul(GONS_PERCISION).div(gonsPerFragment);
+    }
+
+    function convertFragmentToValues(uint256 gons)
+        public
+        view
+        returns (uint256 fragments)
+    {
+        fragments = gons.mul(gonsPerFragment).div(GONS_PERCISION);
     }
 }
