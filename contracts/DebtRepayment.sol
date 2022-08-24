@@ -25,8 +25,8 @@ contract DebtRepayment is Initializable, AccessControl, ISnapshot {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     uint256 public totalFragments;
-    uint256 public totalDebtxFragments;
-    mapping(address => uint256) public debtFragmentBalances;
+    mapping(address => uint256) public fragmentsOf;
+
     mapping(address => uint256) public userDebtxFactor;
 
     IStakingContract public rewards;
@@ -43,46 +43,43 @@ contract DebtRepayment is Initializable, AccessControl, ISnapshot {
     }
 
     function register(uint256 amount, address who) external override {
-        require(debtFragmentBalances[who] == 0, "already minted");
+        require(fragmentsOf[who] == 0, "already minted");
         _checkRole(MINTER_ROLE, _msgSender());
 
-        debtFragmentBalances[who] = amount;
         userDebtxFactor[who] = MAX_FACTOR;
+        uint256 debtx = convertFragmentToValues(
+            convertDebtToDebtX(amount, userDebtxFactor[who])
+        );
+        fragmentsOf[who] = convertValueToFragments(debtx);
 
-        totalFragments += amount;
-        totalDebtxFragments += balanceOfDebtx(who);
+        totalFragments += fragmentsOf[who];
         rewards.updateReward(who);
     }
 
     function balanceOf(address who) public view override returns (uint256) {
-        return convertFragmentToGons(balanceOfDebtx(who));
+        return convertFragmentToValues(fragmentsOf[who]);
+    }
+
+    function debtOf(address who) public view override returns (uint256) {
+        return convertDebtXToDebt(balanceOf(who), userDebtxFactor[who]);
     }
 
     function totalSupply() public view override returns (uint256) {
-        return convertFragmentToGons(totalFragments);
+        return convertFragmentToValues(totalFragments);
     }
 
-    function totalSupplyDebtx() public view override returns (uint256) {
-        return convertFragmentToGons(totalDebtxFragments);
-    }
-
-    function balanceOfDebtx(address who)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        return
-            convertDebtToDebtX(debtFragmentBalances[who], userDebtxFactor[who]);
-    }
-
-    function rebaseDebt(uint256 debtxFactor) external {
+    function rebaseDebt(uint256 newDebtxFactor) external {
         address who = _msgSender();
-        require(debtFragmentBalances[who] >= 0, "balance = 0");
+        require(fragmentsOf[who] > 0, "balance = 0");
 
-        totalDebtxFragments -= balanceOfDebtx(who);
-        userDebtxFactor[who] = debtxFactor;
-        totalDebtxFragments += balanceOfDebtx(who);
+        totalFragments -= fragmentsOf[who];
+
+        uint256 debt = convertDebtXToDebt(balanceOf(who), userDebtxFactor[who]);
+        uint256 newdebt = convertDebtToDebtX(debt, newDebtxFactor);
+        fragmentsOf[who] = convertValueToFragments(newdebt);
+        userDebtxFactor[who] = newDebtxFactor;
+
+        totalFragments += fragmentsOf[who];
 
         rewards.updateReward(who);
     }
@@ -116,7 +113,7 @@ contract DebtRepayment is Initializable, AccessControl, ISnapshot {
         debt = (debtx * 1e18) / factorMultiplierE18(factor);
     }
 
-    function convertFragmentToGons(uint256 fragments)
+    function convertFragmentToValues(uint256 fragments)
         public
         view
         returns (uint256 gons)
@@ -124,7 +121,7 @@ contract DebtRepayment is Initializable, AccessControl, ISnapshot {
         gons = fragments.mul(GONS_PERCISION).div(gonsPerFragment);
     }
 
-    function convertFragmentToValues(uint256 gons)
+    function convertValueToFragments(uint256 gons)
         public
         view
         returns (uint256 fragments)

@@ -41,11 +41,11 @@ contract StakingContract is Ownable, IStakingContract, ReentrancyGuard {
     /* ========== VIEWS ========== */
 
     function totalSupply() public view override returns (uint256) {
-        return snapshot.totalSupplyDebtx();
+        return snapshot.totalSupply();
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        return snapshot.balanceOfDebtx(account);
+        return snapshot.balanceOf(account);
     }
 
     function lastTimeRewardApplicable() public view override returns (uint256) {
