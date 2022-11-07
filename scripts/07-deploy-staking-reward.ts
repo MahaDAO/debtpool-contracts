@@ -1,25 +1,36 @@
+/* eslint-disable node/no-missing-import */
 /* eslint-disable no-process-exit */
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
 import { wait } from "./utils";
 import hre, { ethers } from "hardhat";
 
 async function main() {
+  // const tokenAdrs = "0x2057d85f2eA34a3ff78E4fE092979DBF4dd32766"; // Rinkeby ARTH-DP token address
   const tokenAdrs = `${process.env.DP_TOKEN}`;
+  const duration = "30000000000000000000"; // 30 days
+  const params = [
+    `${process.env.MainWalletAdrs}`,
+    tokenAdrs,
+    tokenAdrs,
+    duration,
+  ];
 
-  const Contract = await ethers.getContractFactory("Snapshot");
-  const instance = await Contract.deploy(tokenAdrs);
+  const Contract = await ethers.getContractFactory("StakingRewardsV2");
+
+  const instance = await Contract.deploy(
+    params[0],
+    params[1],
+    params[2],
+    params[3]
+  );
   await instance.deployed();
+
   console.log("deployed to ", instance.address);
 
   await wait(30 * 1000);
 
   await hre.run("verify:verify", {
     address: instance.address,
-    constructorArguments: tokenAdrs,
+    constructorArguments: params,
   });
 }
 

@@ -1,0 +1,225 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.4.18;
+
+import {EventfulMarket} from "./EventfulMarket.sol";
+import {DSMath} from "./DSMath.sol";
+import {ERC20} from "./ERC20.sol";
+
+contract SimpleMarket is EventfulMarket, DSMath {
+
+    uint public last_offer_id;
+
+    mapping (uint => OfferInfo) public offers;
+
+    bool locked;
+
+    struct OfferInfo {
+        uint     pay_amt;
+        ERC20    pay_gem;
+        uint     buy_amt;
+        ERC20    buy_gem;
+        address  owner;
+        uint64   timestamp;
+    }
+
+    modifier can_buy(uint id) {
+        require(isActive(id), "SM can_buy id inctive");
+        _;
+    }
+
+    modifier can_cancel(uint id) {
+        require(isActive(id), "can_cancel id inactive");
+        require(getOwner(id) == msg.sender, "can_cancel getOwner");
+        _;
+    }
+
+    modifier can_offer {
+        _;
+    }
+
+    modifier synchronized {
+        require(!locked, "synchro-shouldn't be locked");
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    function isActive(uint id) public constant returns (bool active) {
+        return offers[id].timestamp > 0;
+    }
+
+    function getOwner(uint id) public constant returns (address owner) {
+        return offers[id].owner;
+    }
+
+    function getOffer(uint id) public constant returns (uint, ERC20, uint, ERC20) {
+      var offer = offers[id];
+      return (offer.pay_amt, offer.pay_gem,
+              offer.buy_amt, offer.buy_gem);
+    }
+
+    // ---- Public entrypoints ---- //
+
+    function bump(bytes32 id_)
+        public
+        can_buy(uint256(id_))
+    {
+        var id = uint256(id_);
+        LogBump(
+            id_,
+            keccak256(offers[id].pay_gem, offers[id].buy_gem),
+            offers[id].owner,
+            offers[id].pay_gem,
+            offers[id].buy_gem,
+            uint128(offers[id].pay_amt),
+            uint128(offers[id].buy_amt),
+            offers[id].timestamp
+        );
+    }
+
+    // Accept given `quantity` of an offer. Transfers funds from caller to
+    // offer maker, and from market to caller.
+    function buy(uint id, uint quantity)
+        public
+        can_buy(id)
+        synchronized
+        returns (bool)
+    {
+        OfferInfo memory offer = offers[id];
+        uint spend = mul(quantity, offer.buy_amt) / offer.pay_amt;
+
+        require(uint128(spend) == spend, "buy-spend not equal");
+        require(uint128(quantity) == quantity, "buy-quantity not equal");
+
+        // For backwards semantic compatibility.
+        if (quantity == 0 || spend == 0 ||
+            quantity > offer.pay_amt || spend > offer.buy_amt)
+        {
+            return false;
+        }
+
+        offers[id].pay_amt = sub(offer.pay_amt, quantity);
+        offers[id].buy_amt = sub(offer.buy_amt, spend);
+        require( offer.buy_gem.transferFrom(msg.sender, offer.owner, spend), "buy-transferFrom failed");
+        require( offer.pay_gem.transfer(msg.sender, quantity), "buy-transfer failed" );
+
+        LogItemUpdate(id);
+        LogTake(
+            bytes32(id),
+            keccak256(offer.pay_gem, offer.buy_gem),
+            offer.owner,
+            offer.pay_gem,
+            offer.buy_gem,
+            msg.sender,
+            uint128(quantity),
+            uint128(spend),
+            uint64(now)
+        );
+        LogTrade(quantity, offer.pay_gem, spend, offer.buy_gem);
+
+        if (offers[id].pay_amt == 0) {
+          delete offers[id];
+        }
+
+        return true;
+    }
+
+    // Cancel an offer. Refunds offer maker.
+    function cancel(uint id)
+        public
+        can_cancel(id)
+        synchronized
+        returns (bool success)
+    {
+        // read-only offer. Modify an offer by directly accessing offers[id]
+        OfferInfo memory offer = offers[id];
+        delete offers[id];
+
+        require( offer.pay_gem.transfer(offer.owner, offer.pay_amt), "cancel-transfer failed" );
+
+        LogItemUpdate(id);
+        LogKill(
+            bytes32(id),
+            keccak256(offer.pay_gem, offer.buy_gem),
+            offer.owner,
+            offer.pay_gem,
+            offer.buy_gem,
+            uint128(offer.pay_amt),
+            uint128(offer.buy_amt),
+            uint64(now)
+        );
+
+        success = true;
+    }
+
+    function kill(bytes32 id)
+        public
+    {
+        require(cancel(uint256(id)), "kill-cancel failed");
+    }
+
+    function make(
+        ERC20    pay_gem,
+        ERC20    buy_gem,
+        uint128  pay_amt,
+        uint128  buy_amt
+    )
+        public
+        returns (bytes32 id)
+    {
+        return bytes32(offer(pay_amt, pay_gem, buy_amt, buy_gem));
+    }
+
+    // Make a new offer. Takes funds from the caller into market escrow.
+    function offer(uint pay_amt, ERC20 pay_gem, uint buy_amt, ERC20 buy_gem)
+        public
+        can_offer
+        synchronized
+        returns (uint id)
+    {
+        require(uint128(pay_amt) == pay_amt, "offer-pay_amt should be equal");
+        require(uint128(buy_amt) == buy_amt, "offer-buy_amt should be equal");
+        require(pay_amt > 0, "offer-pay_amt should be >0");
+        require(pay_gem != ERC20(0x0), "offer-pay_gem shouldn't be = ERC20(0x0)");
+        require(buy_amt > 0, "offer-buy_amt should be >0");
+        require(buy_gem != ERC20(0x0), "offer-buy_gem shouldn't be = ERC20(0x0)");
+        require(pay_gem != buy_gem, "offer-pay_gem shouldn't be = buy_gem");
+
+        OfferInfo memory info;
+        info.pay_amt = pay_amt;
+        info.pay_gem = pay_gem;
+        info.buy_amt = buy_amt;
+        info.buy_gem = buy_gem;
+        info.owner = msg.sender;
+        info.timestamp = uint64(now);
+        id = _next_id();
+        offers[id] = info;
+
+        require( pay_gem.transferFrom(msg.sender, this, pay_amt), "new-transferFrom failed" );
+
+        LogItemUpdate(id);
+        LogMake(
+            bytes32(id),
+            keccak256(pay_gem, buy_gem),
+            msg.sender,
+            pay_gem,
+            buy_gem,
+            uint128(pay_amt),
+            uint128(buy_amt),
+            uint64(now)
+        );
+    }
+
+    function take(bytes32 id, uint128 maxTakeAmount)
+        public
+    {
+        require(buy(uint256(id), maxTakeAmount), "take fn - calling buy function failed");
+    }
+
+    function _next_id()
+        internal
+        returns (uint)
+    {
+        last_offer_id++; return last_offer_id;
+    }
+}
