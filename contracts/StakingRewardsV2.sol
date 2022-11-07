@@ -2,29 +2,27 @@
 
 pragma solidity ^0.8.0;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Math } from  "@openzeppelin/contracts/utils/math/Math.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-// Inheritance
-import {RewardsDistributionRecipient} from  "./RewardsDistributionRecipient.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IDebtToken} from "./interfaces/IDebtToken.sol";
 
 // NOTE: V2 allows setting of rewardsDuration in constructor
-contract StakingRewardsV2 is RewardsDistributionRecipient, ReentrancyGuard {
+contract StakingRewardsV2 is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
 
     /* ========== STATE VARIABLES ========== */
 
     IERC20 public rewardsToken;
-    IERC20 public stakingToken;
+    IDebtToken public debtToken;
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
     uint256 public rewardsDuration;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
+    uint256 public burnRate;
 
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
@@ -35,15 +33,14 @@ contract StakingRewardsV2 is RewardsDistributionRecipient, ReentrancyGuard {
     /* ========== CONSTRUCTOR ========== */
 
     constructor(
-        address _rewardsDistribution,
         address _rewardsToken,
-        address _stakingToken,
-        uint256 _rewardsDuration
+        address _debtToken,
+        uint256 _burnRate // the rate at which tokens are burn
     ) public {
         rewardsToken = IERC20(_rewardsToken);
-        stakingToken = IERC20(_stakingToken);
-        rewardsDistribution = _rewardsDistribution;
-        rewardsDuration = _rewardsDuration;
+        debtToken = IDebtToken(_debtToken);
+        burnRate = _burnRate;
+        rewardsDuration = 1;
     }
 
     /* ========== VIEWS ========== */
@@ -66,12 +63,20 @@ contract StakingRewardsV2 is RewardsDistributionRecipient, ReentrancyGuard {
         }
         return
             rewardPerTokenStored.add(
-                lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply)
+                lastTimeRewardApplicable()
+                    .sub(lastUpdateTime)
+                    .mul(rewardRate)
+                    .mul(1e18)
+                    .div(_totalSupply)
             );
     }
 
     function earned(address account) public view returns (uint256) {
-        return _balances[account].mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
+        return
+            _balances[account]
+                .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
+                .div(1e18)
+                .add(rewards[account]);
     }
 
     function getRewardForDuration() external view returns (uint256) {
@@ -80,19 +85,34 @@ contract StakingRewardsV2 is RewardsDistributionRecipient, ReentrancyGuard {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(uint256 amount) external nonReentrant updateReward(msg.sender) {
+    function stake(uint256 amount)
+        external
+        nonReentrant
+        updateReward(msg.sender)
+    {
         require(amount > 0, "Cannot stake 0");
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
-        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        debtToken.transferFrom(msg.sender, address(this), amount);
         emit Staked(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) public nonReentrant updateReward(msg.sender) {
+    function withdraw(uint256 amount)
+        public
+        nonReentrant
+        updateReward(msg.sender)
+    {
         require(amount > 0, "Cannot withdraw 0");
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        stakingToken.safeTransfer(msg.sender, amount);
+        debtToken.transfer(msg.sender, amount);
+        emit Withdrawn(msg.sender, amount);
+    }
+
+    function _withdraw(address who, uint256 amount) public {
+        _totalSupply = _totalSupply.sub(amount);
+        _balances[who] = _balances[who].sub(amount);
+        debtToken.transfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
     }
 
@@ -100,19 +120,27 @@ contract StakingRewardsV2 is RewardsDistributionRecipient, ReentrancyGuard {
         uint256 reward = rewards[msg.sender];
         if (reward > 0) {
             rewards[msg.sender] = 0;
-            rewardsToken.safeTransfer(msg.sender, reward);
+            rewardsToken.transfer(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);
+            _burnBalance(msg.sender, reward);
         }
     }
 
-    function exit() external {
-        withdraw(_balances[msg.sender]);
-        getReward();
+    function _burnBalance(address who, uint256 rewardAmount) internal {
+        uint256 burnAmount = rewardAmount.mul(burnRate).div(1e18);
+        _totalSupply = _totalSupply.sub(burnAmount);
+        _balances[who] = _balances[who].sub(burnAmount);
+        debtToken.burn(burnAmount);
+        emit Burnt(msg.sender, burnAmount);
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    function notifyRewardAmount(uint256 reward) external override onlyRewardsDistribution updateReward(address(0)) {
+    function notifyRewardAmount(uint256 reward)
+        external
+        onlyOwner
+        updateReward(address(0))
+    {
         if (block.timestamp >= periodFinish) {
             rewardRate = reward.div(rewardsDuration);
         } else {
@@ -125,8 +153,11 @@ contract StakingRewardsV2 is RewardsDistributionRecipient, ReentrancyGuard {
         // This keeps the reward rate in the right range, preventing overflows due to
         // very high values of rewardRate in the earned and rewardsPerToken functions;
         // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint balance = rewardsToken.balanceOf(address(this));
-        require(rewardRate <= balance.div(rewardsDuration), "Provided reward too high");
+        uint256 balance = rewardsToken.balanceOf(address(this));
+        require(
+            rewardRate <= balance.div(rewardsDuration),
+            "Provided reward too high"
+        );
 
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(rewardsDuration);
@@ -149,6 +180,7 @@ contract StakingRewardsV2 is RewardsDistributionRecipient, ReentrancyGuard {
 
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
+    event Burnt(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
 }
