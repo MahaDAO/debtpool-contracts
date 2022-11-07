@@ -33,11 +33,6 @@ contract MatchingMarket is MatchingEvents, ExpiringMarket, DSNote {
         _;
     }
 
-    function MatchingMarket(uint64 close_time)
-        public
-        ExpiringMarket(close_time)
-    {}
-
     // ---- Public entrypoints ---- //
 
     function make(

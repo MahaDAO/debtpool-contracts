@@ -1,68 +1,115 @@
-import hre from "hardhat";
-import { keccak256 } from "js-sha3";
-
-export async function verifyContract(
-  address: string,
-  constructorArgs: any[] = []
-) {
-  console.log(`Verifying contract at address ${address}...`);
-  try {
-    await hre.run("verify:verify", {
-      address: address,
-      constructorArgs,
-    });
-  } catch (error: any) {
-    console.error(`- Error verifying ${address}`);
-  }
-}
-
-/**
- * Checks if the given string is an address
- *
- * @method isAddress
- * @param {String} address the given HEX adress
- * @return {Boolean}
- */
-export const isAddress = function (address: string) {
-  if (!/^(0x)?[0-9a-f]{40}$/i.test(address)) {
-    // check if it has the basic requirements of an address
-    return false;
-  } else if (
-    /^(0x)?[0-9a-f]{40}$/.test(address) ||
-    /^(0x)?[0-9A-F]{40}$/.test(address)
-  ) {
-    // If it's all small caps or all all caps, return true
-    return true;
-  } else {
-    // Otherwise check each case
-    return isChecksumAddress(address);
-  }
-};
-
-/**
- * Checks if the given string is a checksummed address
- *
- * @method isChecksumAddress
- * @param {String} address the given HEX adress
- * @return {Boolean}
- */
-const isChecksumAddress = function (address: string) {
-  // Check each case
-  address = address.replace("0x", "");
-  const addressHash = keccak256(address.toLowerCase());
-  for (let i = 0; i < 40; i++) {
-    // the nth letter should be uppercase if the nth digit of casemap is 1
-    if (
-      (parseInt(addressHash[i], 16) > 7 &&
-        address[i].toUpperCase() !== address[i]) ||
-      (parseInt(addressHash[i], 16) <= 7 &&
-        address[i].toLowerCase() !== address[i])
-    ) {
-      return false;
-    }
-  }
-  return true;
-};
+import * as fs from "fs";
+import hre, { ethers, network } from "hardhat";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 export const wait = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+export default async function verifyContract(
+  hre: HardhatRuntimeEnvironment,
+  address: string,
+  constructorArguments: any[]
+) {
+  try {
+    // await wait(20 * 1000); // wait for 20s
+
+    await hre.run("verify:verify", {
+      address,
+      constructorArguments,
+    });
+  } catch (error: any) {
+    if (error.name !== "NomicLabsHardhatPluginError") {
+      console.error(`- Error verifying: ${error.name}`);
+      console.error(error);
+    }
+  }
+}
+
+export const saveABI = (
+  key: string,
+  abi: string,
+  address: string,
+  verified: boolean
+) => {
+  const filename = `./deployments/${network.name}.json`;
+
+  let outputFile: any = {};
+  if (fs.existsSync(filename)) {
+    const data = fs.readFileSync(filename).toString();
+    outputFile = data === "" ? {} : JSON.parse(data);
+  }
+
+  outputFile[key] = {
+    abi,
+    verified,
+    address,
+  };
+
+  fs.writeFileSync(filename, JSON.stringify(outputFile, null, 2));
+  console.log(`saved ${key}:${address} into ${network.name}.json`);
+};
+
+export const getOutput = (_network?: string) => {
+  const filename = `./deployments/${_network || network.name}.json`;
+
+  let outputFile: any = {};
+  if (fs.existsSync(filename)) {
+    const data = fs.readFileSync(filename).toString();
+    outputFile = data === "" ? {} : JSON.parse(data);
+  }
+
+  return outputFile;
+};
+
+export const getOutputAddress = (key: string, _network?: string) => {
+  const outputFile = getOutput(_network);
+  if (!outputFile[key]) return;
+  return outputFile[key].address;
+};
+
+export const deployOrLoad = async (
+  key: string,
+  contractName: string,
+  args: any[]
+) => {
+  const addr = await getOutputAddress(key);
+  if (addr) {
+    console.log(`using ${key} at ${addr}`);
+    return await ethers.getContractAt(contractName, addr);
+  }
+
+  const { provider } = ethers;
+  const estimateGasPrice = await provider.getGasPrice();
+  const gasPrice = estimateGasPrice.mul(5).div(4);
+
+  console.log(
+    `\ndeploying ${key} at ${ethers.utils.formatUnits(gasPrice, `gwei`)} gwei`
+  );
+  const factory = await ethers.getContractFactory(contractName);
+  const instance = await factory.deploy(...args, { gasPrice });
+  await instance.deployed();
+  console.log(
+    `${instance.address} -> tx hash: ${instance.deployTransaction.hash}`
+  );
+
+  await saveABI(key, contractName, instance.address, false);
+  return instance;
+};
+
+export const deployOrLoadAndVerify = async (
+  key: string,
+  contractName: string,
+  args: any[],
+  delay: number = 5000
+) => {
+  const instance = await deployOrLoad(key, contractName, args);
+
+  const outputFile = getOutput();
+  if (!outputFile[key].verified) {
+    await wait(delay);
+    await verifyContract(hre, instance.address, args);
+    await saveABI(key, contractName, instance.address, true);
+  }
+
+  return instance;
+};

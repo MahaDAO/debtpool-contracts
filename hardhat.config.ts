@@ -29,15 +29,39 @@ const config: HardhatUserConfig = {
     compilers: [
       {
         version: "0.4.18",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       {
         version: "0.4.26",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       {
         version: "0.6.12",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       {
         version: "0.6.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
       {
         version: "0.8.0",
@@ -79,61 +103,11 @@ const config: HardhatUserConfig = {
     currency: "USD",
   },
   etherscan: {
-    apiKey: process.env.PolygonApiKey,
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY,
+    },
   },
 };
 
 export default config;
-
-// /**
-//  * @type import('hardhat/config').HardhatUserConfig
-//  */
-
-// eslint-disable-next-line camelcase
-// const Private_Key = `${process.env.PRIVATE_KEY}`;
-
-// module.exports = {
-//   solidity: {
-//     compilers: [
-//       {
-//         version: "0.6.12",
-//       },
-//       {
-//         version: "0.6.6",
-//       },
-//       {
-//         version: "0.8.0",
-//       },
-//     ],
-//   },
-//   networks: {
-//     rinkeby: {
-//       url: `https://rinkeby.infura.io/v3/3a9a6018905e45669f505505420d81d6`,
-//       // eslint-disable-next-line camelcase
-//       accounts: [`0x${Private_Key}`],
-//       gas: 2100000,
-//       gasPrice: 8000000000,
-//     },
-//     ropsten: {
-//       url: `https://ropsten.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161`,
-//       accounts: [`0x${Private_Key}`],
-//       gas: 2100000,
-//       gasPrice: 8000000000,
-//     },
-//     mumbai: {
-//       url: `https://matic-mumbai.chainstacklabs.com`,
-//       accounts: [`0x${Private_Key}`],
-//       gas: 2100000,
-//       gasPrice: 8000000000, // process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-//     },
-//     polygon: {
-//       url: `https://rpc-mainnet.maticvigil.com`,
-//       gas: 2100000,
-//       gasPrice: 100 * 1e9,
-//       accounts: [`0x${Private_Key}`],
-//     },
-//   },
-//   etherscan: {
-//     apiKey: process.env.ETHERSCAN_API_KEY, // using the etherscan key created for testnet
-//   },
-// };
