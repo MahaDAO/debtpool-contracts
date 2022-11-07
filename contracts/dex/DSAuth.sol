@@ -4,36 +4,34 @@ import {DSAuthEvents} from "./DSAuthEvents.sol";
 import {DSAuthority} from "./DSAuthority.sol";
 
 contract DSAuth is DSAuthEvents {
-    DSAuthority  public  authority;
-    address      public  owner;
+    DSAuthority public authority;
+    address public owner;
 
     function DSAuth() public {
         owner = msg.sender;
-        LogSetOwner(msg.sender);
+        emit LogSetOwner(msg.sender);
     }
 
-    function setOwner(address owner_)
-        public
-        auth
-    {
+    function setOwner(address owner_) public auth {
         owner = owner_;
-        LogSetOwner(owner);
+        emit LogSetOwner(owner);
     }
 
-    function setAuthority(DSAuthority authority_)
-        public
-        auth
-    {
+    function setAuthority(DSAuthority authority_) public auth {
         authority = authority_;
-        LogSetAuthority(authority);
+        emit LogSetAuthority(authority);
     }
 
-    modifier auth {
+    modifier auth() {
         require(isAuthorized(msg.sender, msg.sig), "not authorized");
         _;
     }
 
-    function isAuthorized(address src, bytes4 sig) internal view returns (bool) {
+    function isAuthorized(address src, bytes4 sig)
+        internal
+        view
+        returns (bool)
+    {
         if (src == address(this)) {
             return true;
         } else if (src == owner) {
