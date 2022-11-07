@@ -450,7 +450,7 @@ contract MatchingMarket is MatchingEvents, ExpiringMarket, DSNote {
         ERC20 pay_gem,
         uint256 pay_amt
     ) public constant returns (uint256 fill_amt) {
-        var offerId = getBestOffer(buy_gem, pay_gem); //Get best offer for the token pair
+        uint256 offerId = getBestOffer(buy_gem, pay_gem); //Get best offer for the token pair
         while (pay_amt > offers[offerId].buy_amt) {
             fill_amt = add(fill_amt, offers[offerId].pay_amt); //Add amount to buy accumulator
             pay_amt = sub(pay_amt, offers[offerId].buy_amt); //Decrease amount to pay
@@ -477,7 +477,7 @@ contract MatchingMarket is MatchingEvents, ExpiringMarket, DSNote {
         ERC20 buy_gem,
         uint256 buy_amt
     ) public constant returns (uint256 fill_amt) {
-        var offerId = getBestOffer(buy_gem, pay_gem); //Get best offer for the token pair
+        uint256 offerId = getBestOffer(buy_gem, pay_gem); //Get best offer for the token pair
         while (buy_amt > offers[offerId].pay_amt) {
             fill_amt = add(fill_amt, offers[offerId].buy_amt); //Add amount to pay accumulator
             buy_amt = sub(buy_amt, offers[offerId].pay_amt); //Decrease amount to buy

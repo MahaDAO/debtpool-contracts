@@ -7,7 +7,7 @@ contract DSAuth is DSAuthEvents {
     DSAuthority public authority;
     address public owner;
 
-    function DSAuth() public {
+    constructor() {
         owner = msg.sender;
         emit LogSetOwner(msg.sender);
     }

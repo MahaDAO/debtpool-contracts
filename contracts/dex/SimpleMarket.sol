@@ -61,15 +61,15 @@ contract SimpleMarket is EventfulMarket, DSMath {
             ERC20
         )
     {
-        var offer = offers[id];
+        OfferInfo offer = offers[id];
         return (offer.pay_amt, offer.pay_gem, offer.buy_amt, offer.buy_gem);
     }
 
     // ---- Public entrypoints ---- //
 
     function bump(bytes32 id_) public can_buy(uint256(id_)) {
-        var id = uint256(id_);
-        LogBump(
+        uint256 id = uint256(id_);
+        emit LogBump(
             id_,
             keccak256(offers[id].pay_gem, offers[id].buy_gem),
             offers[id].owner,
