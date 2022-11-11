@@ -1,22 +1,27 @@
 {
-    "DebtToken": {
-        "abi": "DebtToken",
-        "verified": true,
-        "address": "0xC2D23a14d5F93C28Db6a9e6Afdee98279519c7f8"
-    },
-    "MAHA": {
-        "abi": "IERC20",
-        "verified": true,
-        "address": "0xedd6ca8a4202d4a36611e2fff109648c4863ae19"
-    },
-    "USDC": {
-        "abi": "IERC20",
-        "verified": true,
-        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
-    },
-    "MatchingMarket": {
-        "abi": "MatchingMarket",
-        "verified": true,
-        "address": "0xa07687f03AFaC082e8A42b88a5239b9a2D5FAbB6"
-    }
+  "DebtToken": {
+    "abi": "DebtToken",
+    "verified": true,
+    "address": "0xC2D23a14d5F93C28Db6a9e6Afdee98279519c7f8"
+  },
+  "MAHA": {
+    "abi": "IERC20",
+    "verified": true,
+    "address": "0xedd6ca8a4202d4a36611e2fff109648c4863ae19"
+  },
+  "USDC": {
+    "abi": "IERC20",
+    "verified": true,
+    "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
+  },
+  "MatchingMarket": {
+    "abi": "MatchingMarket",
+    "verified": true,
+    "address": "0xa07687f03AFaC082e8A42b88a5239b9a2D5FAbB6"
+  },
+  "StakingRewardsV2": {
+    "abi": "StakingRewardsV2",
+    "verified": true,
+    "address": "0x3B9cCf5f9E890fB3F78274cB6d76b12a8De94F61"
+  }
 }
