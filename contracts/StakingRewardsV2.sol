@@ -122,7 +122,7 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
         debtToken.mint(address(this), mintedSupply);
     }
 
-    function exit() public nonReentrant updateReward(msg.sender) {
+    function exit() public updateReward(msg.sender) {
         getReward();
         _withdraw(msg.sender, _balances[msg.sender]);
     }
@@ -137,7 +137,7 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
         }
     }
 
-    function _withdraw(address who, uint256 amount) internal {
+    function _withdraw(address who, uint256 amount) internal nonReentrant {
         _totalSupply = _totalSupply.sub(amount);
         _balances[who] = _balances[who].sub(amount);
         debtToken.transfer(msg.sender, amount);
