@@ -11,38 +11,21 @@ contract DebtToken is AccessControlEnumerable, ERC20, IDebtToken {
     uint256 public burntSupply;
 
     constructor() ERC20("ARTH Debt Token", "ARTH-DP") {
-        _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    modifier onlyMinter() {
-        require(
-            hasRole(MINTER_ROLE, _msgSender()),
-            "must have minter role to mint"
-        );
-        _;
     }
 
     function mint(address to, uint256 amount)
         external
         virtual
         override
-        onlyMinter
+        onlyRole(MINTER_ROLE)
     {
         _mint(to, amount);
         mintedSupply += amount;
     }
 
-    function mintMultiple(address[] memory to, uint256[] memory amount)
-        external
-        virtual
-        override
-        onlyMinter
-    {
-        for (uint256 i = 0; i < to.length; i++) {
-            _mint(to[i], amount[i]);
-            mintedSupply += amount[i];
-        }
+    function grantMintRole(address to) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _setupRole(MINTER_ROLE, to);
     }
 
     function burn(uint256 amount) external virtual override {
@@ -59,7 +42,7 @@ contract DebtToken is AccessControlEnumerable, ERC20, IDebtToken {
         external
         virtual
         override
-        onlyMinter
+        onlyRole(MINTER_ROLE)
     {
         _burn(who, amount);
         burntSupply += amount;

@@ -6,12 +6,15 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IDebtToken} from "./interfaces/IDebtToken.sol";
+import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 // NOTE: V2 allows setting of rewardsDuration in constructor
-contract StakingRewardsV2 is Ownable, ReentrancyGuard {
+contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
     using SafeMath for uint256;
+
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant NOTIFIER_ROLE = keccak256("NOTIFIER_ROLE");
 
     /* ========== STATE VARIABLES ========== */
 
@@ -41,6 +44,10 @@ contract StakingRewardsV2 is Ownable, ReentrancyGuard {
         debtToken = IDebtToken(_debtToken);
         burnRate = _burnRate;
         rewardsDuration = 1;
+
+        _setupRole(MINTER_ROLE, _msgSender());
+        _setupRole(NOTIFIER_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /* ========== VIEWS ========== */
@@ -97,6 +104,24 @@ contract StakingRewardsV2 is Ownable, ReentrancyGuard {
         emit Staked(msg.sender, amount);
     }
 
+    function mintMultiple(address[] memory who, uint256[] memory amount)
+        external
+        virtual
+        onlyRole(MINTER_ROLE)
+    {
+        uint256 mintedSupply;
+
+        for (uint256 i = 0; i < who.length; i++) {
+            mintedSupply += amount[i];
+
+            _totalSupply = _totalSupply.add(amount[i]);
+            _balances[who[i]] = _balances[who[i]].add(amount[i]);
+            emit Staked(who[i], amount[i]);
+        }
+
+        debtToken.mint(address(this), mintedSupply);
+    }
+
     function exit() public nonReentrant updateReward(msg.sender) {
         getReward();
         _withdraw(msg.sender, _balances[msg.sender]);
@@ -131,7 +156,7 @@ contract StakingRewardsV2 is Ownable, ReentrancyGuard {
 
     function notifyRewardAmount(uint256 reward)
         external
-        onlyOwner
+        onlyRole(NOTIFIER_ROLE)
         updateReward(address(0))
     {
         if (block.timestamp >= periodFinish) {
