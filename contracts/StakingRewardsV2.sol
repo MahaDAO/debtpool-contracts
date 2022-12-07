@@ -36,7 +36,7 @@ contract StakingRewardsV2 is Ownable, ReentrancyGuard {
         address _rewardsToken,
         address _debtToken,
         uint256 _burnRate // the rate at which tokens are burn
-    ) public {
+    ) {
         rewardsToken = IERC20(_rewardsToken);
         debtToken = IDebtToken(_debtToken);
         burnRate = _burnRate;
@@ -97,23 +97,9 @@ contract StakingRewardsV2 is Ownable, ReentrancyGuard {
         emit Staked(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount)
-        public
-        nonReentrant
-        updateReward(msg.sender)
-    {
-        require(amount > 0, "Cannot withdraw 0");
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        debtToken.transfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
-    }
-
-    function _withdraw(address who, uint256 amount) public {
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[who] = _balances[who].sub(amount);
-        debtToken.transfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
+    function exit() public nonReentrant updateReward(msg.sender) {
+        getReward();
+        _withdraw(msg.sender, _balances[msg.sender]);
     }
 
     function getReward() public nonReentrant updateReward(msg.sender) {
@@ -124,6 +110,13 @@ contract StakingRewardsV2 is Ownable, ReentrancyGuard {
             emit RewardPaid(msg.sender, reward);
             _burnBalance(msg.sender, reward);
         }
+    }
+
+    function _withdraw(address who, uint256 amount) internal {
+        _totalSupply = _totalSupply.sub(amount);
+        _balances[who] = _balances[who].sub(amount);
+        debtToken.transfer(msg.sender, amount);
+        emit Withdrawn(msg.sender, amount);
     }
 
     function _burnBalance(address who, uint256 rewardAmount) internal {
