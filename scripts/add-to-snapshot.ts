@@ -4,37 +4,22 @@ import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import path from "path";
 import fs from "fs";
-import { ARTHX_SNAPSHOT, ARTH_SNAPSHOT } from "./config";
-import { wait } from "./utils";
+import { getOutputAddress, wait } from "./utils";
+import { parse } from "csv-parse/sync";
 
 async function main() {
-  const isARTH = false;
+  const text = fs.readFileSync(path.resolve(__dirname, "./addresses.csv"));
 
-  const snapshot = isARTH ? ARTH_SNAPSHOT : ARTHX_SNAPSHOT;
-  const instance = await ethers.getContractAt("Snapshot", snapshot);
-
-  const text = fs.readFileSync(
-    path.resolve(__dirname, "../output/address.json")
-  );
-
-  const mappedValues = JSON.parse(text.toString());
-  const filteredValues = mappedValues.filter((t: any) => {
-    const val = BigNumber.from(isARTH ? t.arth : t.arthx);
-    return val.gt(0);
+  const records = parse(text, {
+    columns: true,
+    skip_empty_lines: true,
   });
 
-  const addresses = filteredValues.map((t: any) => t.address);
+  const addresses = records.map((t: any) => t.address);
   const e18 = BigNumber.from(10).pow(18);
-  // const e1 = BigNumber.from(1);
-
-  const values = filteredValues.map((t: any) =>
-    BigNumber.from(isARTH ? t.arth : t.arthx).mul(e18)
+  const values = records.map((t: any) =>
+    BigNumber.from(Math.floor(t.debt)).mul(e18)
   );
-
-  // console.log('approving usdc spend');
-  // const infinity = decimals.mul(9999999999);
-  // await USDC.approve(instance.address, infinity);
-  // console.log('approved usdc spend');
 
   const gap = 100;
   for (let index = 0; index < values.length / gap; index++) {
@@ -42,8 +27,14 @@ async function main() {
     const valuesSnip = values.slice(index * gap, (index + 1) * gap);
 
     // console.log(addressSnip, valuesSnip);
+
+    const staker = await ethers.getContractAt(
+      "StakingRewardsV2",
+      await getOutputAddress("StakingRewardsV2")
+    );
+
     console.log("working on n =", index, valuesSnip.length);
-    const tx1 = await instance.registerMultiple(valuesSnip, addressSnip);
+    const tx1 = await staker.mintMultiple(addressSnip, valuesSnip);
     await wait(5 * 1000);
 
     console.log("done", tx1.hash);

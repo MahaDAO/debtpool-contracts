@@ -4,8 +4,8 @@ import { deployOrLoadAndVerify, getOutputAddress } from "./utils";
 
 async function main() {
   const debtToken = await getOutputAddress("DebtToken");
-  const maha = "0xedd6ca8a4202d4a36611e2fff109648c4863ae19";
-  const usdc = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
+  const maha = await getOutputAddress("MAHA");
+  const usdc = await getOutputAddress("USDC");
 
   const instance = await deployOrLoadAndVerify(
     "MatchingMarket",

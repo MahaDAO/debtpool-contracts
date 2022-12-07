@@ -1,11 +1,11 @@
 /* eslint-disable node/no-missing-import */
 /* eslint-disable no-process-exit */
 import { ethers } from "hardhat";
-import { deployOrLoadAndVerify, getOutputAddress, wait } from "./utils";
+import { deployOrLoadAndVerify, getOutputAddress } from "./utils";
 
 async function main() {
   const debtToken = await ethers.getContractAt(
-    "SnapshoDebtTokent",
+    "DebtToken",
     await getOutputAddress("DebtToken")
   );
 
