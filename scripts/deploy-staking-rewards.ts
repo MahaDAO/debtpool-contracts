@@ -1,5 +1,6 @@
 /* eslint-disable node/no-missing-import */
 /* eslint-disable no-process-exit */
+import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
 import { deployOrLoadAndVerify, getOutputAddress } from "./utils";
 
@@ -9,8 +10,8 @@ async function main() {
     await getOutputAddress("DebtToken")
   );
 
-  const usdc = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
-  const burnRate = "30000000000000000000";
+  const usdc = await getOutputAddress("USDC");
+  const burnRate = BigNumber.from(10).pow(12 + 18);
 
   const staker = await deployOrLoadAndVerify(
     "StakingRewardsV2",
@@ -18,7 +19,11 @@ async function main() {
     [usdc, debtToken.address, burnRate]
   );
 
-  await debtToken.grantMintRole(staker.address);
+  console.log(staker.address);
+  await debtToken.grantRole(
+    "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
+    "0x03998b014EC8B603Db40F30B89E7213d06d48eEd"
+  );
 }
 
 // We recommend this pattern to be able to use async/await everywhere

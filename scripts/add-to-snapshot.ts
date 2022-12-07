@@ -18,20 +18,20 @@ async function main() {
   const addresses = records.map((t: any) => t.address);
   const e18 = BigNumber.from(10).pow(18);
   const values = records.map((t: any) =>
-    BigNumber.from(Math.floor(t.debt)).mul(e18)
+    BigNumber.from(Math.floor(t.debt)).mul(e18).toString()
   );
 
-  const gap = 100;
-  for (let index = 0; index < values.length / gap; index++) {
+  const staker = await ethers.getContractAt(
+    "StakingRewardsV2",
+    await getOutputAddress("StakingRewardsV2")
+  );
+
+  const gap = 10;
+  for (let index = 0; index < 1 /* values.length */ / gap; index++) {
     const addressSnip = addresses.slice(index * gap, (index + 1) * gap);
     const valuesSnip = values.slice(index * gap, (index + 1) * gap);
 
-    // console.log(addressSnip, valuesSnip);
-
-    const staker = await ethers.getContractAt(
-      "StakingRewardsV2",
-      await getOutputAddress("StakingRewardsV2")
-    );
+    console.log(addressSnip, valuesSnip);
 
     console.log("working on n =", index, valuesSnip.length);
     const tx1 = await staker.mintMultiple(addressSnip, valuesSnip);
