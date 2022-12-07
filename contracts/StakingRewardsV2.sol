@@ -159,6 +159,8 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
         onlyRole(NOTIFIER_ROLE)
         updateReward(address(0))
     {
+        rewardsToken.transferFrom(msg.sender, address(this), reward);
+
         if (block.timestamp >= periodFinish) {
             rewardRate = reward.div(rewardsDuration);
         } else {
