@@ -20,6 +20,7 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
 
     IERC20 public rewardsToken;
     IDebtToken public debtToken;
+
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
     uint256 public rewardsDuration;
@@ -38,6 +39,8 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
     constructor(
         address _rewardsToken,
         address _debtToken,
+        address _notifier,
+        address _governance,
         uint256 _burnRate // the rate at which tokens are burn
     ) {
         rewardsToken = IERC20(_rewardsToken);
@@ -46,8 +49,8 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
         rewardsDuration = 1;
 
         _setupRole(MINTER_ROLE, _msgSender());
-        _setupRole(NOTIFIER_ROLE, _msgSender());
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(NOTIFIER_ROLE, _notifier);
+        _setupRole(DEFAULT_ADMIN_ROLE, _governance);
     }
 
     /* ========== VIEWS ========== */
@@ -194,6 +197,10 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
         _;
+    }
+
+    function refund(IERC20 _token) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _token.transfer(msg.sender, _token.balanceOf(address(this)));
     }
 
     /* ========== EVENTS ========== */
