@@ -77,9 +77,9 @@ const config: HardhatUserConfig = {
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     polygon: {
-      url: process.env.POLYGON_RPC || "",
-      gas: 21000,
-      gasPrice: 100 * 1e9,
+      url: "https://polygon-rpc.com/",
+      // gas: 21000,
+      // gasPrice: 100 * 1e9,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },

@@ -10,20 +10,30 @@ async function main() {
     await getOutputAddress("DebtToken")
   );
 
+  const [deployer] = await ethers.getSigners();
   const usdc = await getOutputAddress("USDC");
   const burnRate = BigNumber.from(10).pow(12 + 18);
 
   const staker = await deployOrLoadAndVerify(
     "StakingRewardsV2",
     "StakingRewardsV2",
-    [usdc, debtToken.address, burnRate]
+    [
+      usdc,
+      debtToken.address,
+      "0x67c569F960C1Cc0B9a7979A851f5a67018c5A3b0",
+      "0x67c569F960C1Cc0B9a7979A851f5a67018c5A3b0",
+      burnRate,
+    ]
   );
 
+  // address _rewardsToken,
+  // address _debtToken,
+  // address _notifier,
+  // address _governance,
+  // uint256 _burnRate // the rate at which tokens are burn
+
   console.log(staker.address);
-  await debtToken.grantRole(
-    "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6",
-    "0x03998b014EC8B603Db40F30B89E7213d06d48eEd"
-  );
+  await debtToken.connect(deployer).grantMintRole(staker.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
