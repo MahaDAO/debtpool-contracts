@@ -31,6 +31,8 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
 
+    address[] public investors;
+
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
 
@@ -116,6 +118,9 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
 
         for (uint256 i = 0; i < who.length; i++) {
             mintedSupply += amount[i];
+
+            // record the investor
+            if (_balances[who[i]] == 0) investors.push(who[i]);
 
             _totalSupply = _totalSupply.add(amount[i]);
             _balances[who[i]] = _balances[who[i]].add(amount[i]);
