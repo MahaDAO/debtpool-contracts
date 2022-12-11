@@ -187,6 +187,10 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
         emit RewardAdded(reward);
     }
 
+    function refund(IERC20 _token) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _token.transfer(msg.sender, _token.balanceOf(address(this)));
+    }
+
     /* ========== MODIFIERS ========== */
 
     modifier updateReward(address account) {
@@ -197,10 +201,6 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
         _;
-    }
-
-    function refund(IERC20 _token) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _token.transfer(msg.sender, _token.balanceOf(address(this)));
     }
 
     /* ========== EVENTS ========== */
