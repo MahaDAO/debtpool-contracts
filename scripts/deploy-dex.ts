@@ -13,7 +13,7 @@ async function main() {
     []
   );
 
-  console.log(debtToken, maha, usdc, instance.addTokenPairWhitelist);
+  // console.log(debtToken, maha, usdc, instance.addTokenPairWhitelist);
   await instance.addTokenPairWhitelist(maha, debtToken);
   await instance.addTokenPairWhitelist(usdc, debtToken);
 }

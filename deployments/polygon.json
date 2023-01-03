@@ -12,11 +12,11 @@
   "DebtToken": {
     "abi": "DebtToken",
     "verified": true,
-    "address": "0xEe5B950e135853a28a2b8b456735358D135661d5"
+    "address": "0x32734f69a310b49D150Bc16968c465a6f23983DA"
   },
-  "StakingRewardsV2": {
-    "abi": "StakingRewardsV2",
+  "MatchingMarket": {
+    "abi": "MatchingMarket",
     "verified": true,
-    "address": "0x05daC8550327C6aC6CF91E5aF0ef5eC36f0aE4FD"
+    "address": "0xfd596346E838BDdD8C42AB62a8e3040b28247fC9"
   }
 }
