@@ -2,7 +2,7 @@
 /* eslint-disable no-process-exit */
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
-import { deployOrLoadAndVerify, getOutputAddress } from "./utils";
+import { deployOrLoadAndVerify, getOutputAddress, saveABI } from "./utils";
 
 async function main() {
   const debtToken = await ethers.getContractAt(
@@ -14,26 +14,32 @@ async function main() {
   const usdc = await getOutputAddress("USDC");
   const burnRate = BigNumber.from(10).pow(12 + 18);
 
-  const staker = await deployOrLoadAndVerify(
+  const StakingRewardsV2 = await ethers.getContractFactory("StakingRewardsV2");
+  const initData = StakingRewardsV2.interface.encodeFunctionData("initialize", [
+    usdc,
+    debtToken.address,
+    deployer.address,
+    deployer.address,
+    burnRate,
+  ]);
+
+  const implementation = await deployOrLoadAndVerify(
+    `StakingRewardsV2Impl`,
     "StakingRewardsV2",
-    "StakingRewardsV2",
+    []
+  );
+
+  const proxy = await deployOrLoadAndVerify(
+    `StakingRewardsV2Proxy`,
+    "TransparentUpgradeableProxy",
     [
-      usdc,
-      debtToken.address,
-      "0x67c569F960C1Cc0B9a7979A851f5a67018c5A3b0",
-      "0x67c569F960C1Cc0B9a7979A851f5a67018c5A3b0",
-      burnRate,
+      implementation.address,
+      "0xeccE08c2636820a81FC0c805dBDC7D846636bbc4",
+      initData,
     ]
   );
 
-  // address _rewardsToken,
-  // address _debtToken,
-  // address _notifier,
-  // address _governance,
-  // uint256 _burnRate // the rate at which tokens are burn
-
-  console.log(staker.address);
-  await debtToken.connect(deployer).grantMintRole(staker.address);
+  await saveABI(`StakingRewardsV2`, "StakingRewardsV2", proxy.address, true);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
