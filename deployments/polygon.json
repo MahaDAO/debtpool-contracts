@@ -9,19 +9,29 @@
     "verified": true,
     "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
   },
-  "DebtToken": {
-    "abi": "DebtToken",
-    "verified": true,
-    "address": "0xC5eCb0d601A07A5EDe9adC7DCd6943897D5aEcD6"
-  },
   "MatchingMarket": {
     "abi": "MatchingMarket",
     "verified": true,
-    "address": "0x73367216bd3e80cC009B4D6A45C1b615be4Cae7C"
+    "address": "0xe7820CfB7EAF051b0Fe2da4606b2EbfCb5eA15E6"
+  },
+  "DebtToken": {
+    "abi": "DebtToken",
+    "verified": true,
+    "address": "0xdF32C0137e17F7cca07984947Aa323Fc84a7Ce0E"
+  },
+  "StakingRewardsV2Impl": {
+    "abi": "StakingRewardsV2",
+    "verified": true,
+    "address": "0x16183425EAA65E0336372ce4D1ee5D883992bFeF"
+  },
+  "StakingRewardsV2Proxy": {
+    "abi": "TransparentUpgradeableProxy",
+    "verified": true,
+    "address": "0xE016cCB6308432a6b7aCc1015C94d6B6d6485cba"
   },
   "StakingRewardsV2": {
     "abi": "StakingRewardsV2",
     "verified": true,
-    "address": "0x888cc7221B833c9c27ba8953AD9308b17F29D72B"
+    "address": "0xE016cCB6308432a6b7aCc1015C94d6B6d6485cba"
   }
 }

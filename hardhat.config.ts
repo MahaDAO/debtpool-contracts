@@ -55,7 +55,7 @@ const config: HardhatUserConfig = {
         },
       },
       {
-        version: "0.6.6",
+        version: "0.8.2",
         settings: {
           optimizer: {
             enabled: true,
@@ -77,9 +77,9 @@ const config: HardhatUserConfig = {
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     polygon: {
-      url: "https://polygon-rpc.com/",
+      url: process.env.POLYGON_RPC,
       // gas: 21000,
-      // gasPrice: 100 * 1e9,
+      gasPrice: 100 * 1e9,
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
