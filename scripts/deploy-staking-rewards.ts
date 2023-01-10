@@ -39,6 +39,11 @@ async function main() {
     ]
   );
 
+  const inst = await ethers.getContractAt(`StakingRewardsV2`, proxy.address);
+  // await inst.grantRole(await inst.MINTER_ROLE(), deployer.address);
+
+  await debtToken.grantMintRole(inst.address);
+
   await saveABI(`StakingRewardsV2`, "StakingRewardsV2", proxy.address, true);
 }
 
