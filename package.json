@@ -41,5 +41,6 @@
   },
   "dependencies": {
     "csv-parse": "^5.3.3"
-  }
+  },
+  "version": "1.0.0"
 }
