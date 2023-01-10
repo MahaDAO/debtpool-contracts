@@ -132,7 +132,9 @@ contract StakingRewardsV2 is
             mintedSupply += amount[i];
 
             // record the investor
-            if (_balances[who[i]] == 0) investors.push(who[i]);
+            // if (_balances[who[i]] == 0)
+            require(_balances[who[i]] == 0, "investor already added");
+            investors.push(who[i]);
 
             _totalSupply = _totalSupply.add(amount[i]);
             _balances[who[i]] = _balances[who[i]].add(amount[i]);
@@ -140,6 +142,20 @@ contract StakingRewardsV2 is
         }
 
         debtToken.mint(address(this), mintedSupply);
+    }
+
+    function mint(address who, uint256 amount)
+        external
+        virtual
+        onlyRole(MINTER_ROLE)
+    {
+        _totalSupply = _totalSupply.add(amount);
+        _balances[who] = _balances[who].add(amount);
+        emit Staked(who, amount);
+
+        if (_balances[who] == 0) investors.push(who);
+
+        debtToken.mint(address(this), amount);
     }
 
     function exit() public updateReward(msg.sender) {
