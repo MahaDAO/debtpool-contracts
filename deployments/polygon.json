@@ -2,7 +2,7 @@
   "MAHA": {
     "abi": "IERC20",
     "verified": true,
-    "address": "0xedd6ca8a4202d4a36611e2fff109648c4863ae19"
+    "address": "0x745407c86df8db893011912d3ab28e68b62e49b0"
   },
   "USDC": {
     "abi": "IERC20",
@@ -12,11 +12,16 @@
   "DebtToken": {
     "abi": "DebtToken",
     "verified": true,
-    "address": "0x32734f69a310b49D150Bc16968c465a6f23983DA"
+    "address": "0xC5eCb0d601A07A5EDe9adC7DCd6943897D5aEcD6"
   },
   "MatchingMarket": {
     "abi": "MatchingMarket",
     "verified": true,
-    "address": "0xfd596346E838BDdD8C42AB62a8e3040b28247fC9"
+    "address": "0x73367216bd3e80cC009B4D6A45C1b615be4Cae7C"
+  },
+  "StakingRewardsV2": {
+    "abi": "StakingRewardsV2",
+    "verified": true,
+    "address": "0x888cc7221B833c9c27ba8953AD9308b17F29D72B"
   }
 }
