@@ -8,20 +8,5 @@
     "abi": "IERC20",
     "verified": true,
     "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
-  },
-  "DebtToken": {
-    "abi": "DebtToken",
-    "verified": true,
-    "address": "0xC5eCb0d601A07A5EDe9adC7DCd6943897D5aEcD6"
-  },
-  "MatchingMarket": {
-    "abi": "MatchingMarket",
-    "verified": true,
-    "address": "0x73367216bd3e80cC009B4D6A45C1b615be4Cae7C"
-  },
-  "StakingRewardsV2": {
-    "abi": "StakingRewardsV2",
-    "verified": true,
-    "address": "0x888cc7221B833c9c27ba8953AD9308b17F29D72B"
   }
 }
