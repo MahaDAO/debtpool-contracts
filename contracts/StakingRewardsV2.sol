@@ -8,13 +8,18 @@ import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IDebtToken} from "./interfaces/IDebtToken.sol";
 import {AccessControlEnumerable} from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import {VersionedInitializable} from "./proxy/VersionedInitializable.sol";
 
 // NOTE: V2 allows setting of rewardsDuration in constructor
-contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
+contract StakingRewardsV2 is
+    AccessControlEnumerable,
+    ReentrancyGuard,
+    VersionedInitializable
+{
     using SafeMath for uint256;
 
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    bytes32 public constant NOTIFIER_ROLE = keccak256("NOTIFIER_ROLE");
+    bytes32 public MINTER_ROLE;
+    bytes32 public NOTIFIER_ROLE;
 
     /* ========== STATE VARIABLES ========== */
 
@@ -38,13 +43,13 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(
+    function initialize(
         address _rewardsToken,
         address _debtToken,
         address _notifier,
         address _governance,
         uint256 _burnRate // the rate at which tokens are burn
-    ) {
+    ) external initializer {
         rewardsToken = IERC20(_rewardsToken);
         debtToken = IDebtToken(_debtToken);
         burnRate = _burnRate;
@@ -53,6 +58,13 @@ contract StakingRewardsV2 is AccessControlEnumerable, ReentrancyGuard {
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(NOTIFIER_ROLE, _notifier);
         _setupRole(DEFAULT_ADMIN_ROLE, _governance);
+
+        MINTER_ROLE = keccak256("MINTER_ROLE");
+        NOTIFIER_ROLE = keccak256("NOTIFIER_ROLE");
+    }
+
+    function getRevision() public pure virtual override returns (uint256) {
+        return 0;
     }
 
     /* ========== VIEWS ========== */

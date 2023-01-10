@@ -15,14 +15,14 @@ const Web3 = require("web3");
 async function main() {
   const arthSnapshot = "0x7e5c1d1b1d4bb6e93d96f97dc6b69d96fa3710b4";
   const arthxStaking = "0x17594c5a5305a5ba032012aedd5bbd5906852020";
-  const arthx = "0xd354d56dae3588f1145dd664bc5094437b889d6f";
+  const arthx = "0xAaA8e38F71A825353CE78183E1f0742ABcb1F05d";
 
   const e18 = BigNumber.from(10).pow(18);
 
   const output: string[] = [];
 
   const addresses = fs
-    .readFileSync(path.resolve(__dirname, "./snapshots/arthx-investors.txt"))
+    .readFileSync(path.resolve(__dirname, "./snapshots/arth-snapshot.txt"))
     .toString()
     .split("\n");
 
