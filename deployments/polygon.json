@@ -23,5 +23,15 @@
     "abi": "StakingRewardsV2",
     "verified": true,
     "address": "0x05bC6c4aB02F6523cE5268cf72212a11d4D395CB"
+  },
+  "StakingRewardsV2Proxy": {
+    "abi": "StakingRewardsV2",
+    "verified": true,
+    "address": "0x05bC6c4aB02F6523cE5268cf72212a11d4D395CB"
+  },
+  "StakingRewardsV2Impl": {
+    "abi": "StakingRewardsV2",
+    "verified": true,
+    "address": "0x24983Bf90dE3f2F395adCd1D473Cb022738394bC"
   }
 }

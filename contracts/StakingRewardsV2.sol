@@ -64,7 +64,7 @@ contract StakingRewardsV2 is
     }
 
     function getRevision() public pure virtual override returns (uint256) {
-        return 0;
+        return 1;
     }
 
     /* ========== VIEWS ========== */
@@ -178,6 +178,10 @@ contract StakingRewardsV2 is
         _balances[who] = _balances[who].sub(amount);
         debtToken.transfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
+    }
+
+    function withdraw(uint256 amount) external {
+        _withdraw(msg.sender, amount);
     }
 
     function _burnBalance(address who, uint256 rewardAmount) internal {

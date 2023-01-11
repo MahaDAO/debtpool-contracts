@@ -39,10 +39,15 @@ async function main() {
     ]
   );
 
-  const inst = await ethers.getContractAt(`StakingRewardsV2`, proxy.address);
-  // await inst.grantRole(await inst.MINTER_ROLE(), deployer.address);
+  console.log("init data", initData);
 
-  await debtToken.grantMintRole(inst.address);
+  // const inst = await ethers.getContractAt(`StakingRewardsV2`, proxy.address);
+  // await inst.grantRole(
+  //   await inst.MINTER_ROLE(),
+  //   "0x90366C6F59B2Db217E638DFD4CB04d8142e2fC3A"
+  // );
+
+  // await debtToken.grantMintRole(inst.address);
 
   await saveABI(`StakingRewardsV2`, "StakingRewardsV2", proxy.address, true);
 }
