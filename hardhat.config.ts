@@ -65,10 +65,21 @@ const config: HardhatUserConfig = {
       },
       {
         version: "0.8.0",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
     ],
   },
   networks: {
+    hardhat: {
+      forking: {
+        url: process.env.POLYGON_RPC || "",
+       }
+    },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",
       gas: 2100,
